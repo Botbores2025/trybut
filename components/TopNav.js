@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Home, MessageCircle, Users, User, Search, Bell } from "lucide-react";
 
 export default function TopNav() {
@@ -10,6 +13,19 @@ export default function TopNav() {
   const { user } = useAuth();
   const meuPerfil = user ? `/perfil/${user.uid}` : "/perfil";
   const tab = (ativo) => "topnav-tab" + (ativo ? " ativo" : "");
+  const [notifCount, setNotifCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, "solicitacoes"),
+      where("para", "==", user.uid)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setNotifCount(snap.size);
+    });
+    return () => unsub();
+  }, [user]);
 
   return (
     <header className="topnav">
@@ -25,9 +41,15 @@ export default function TopNav() {
           >
             <Search size={19} />
           </Link>
-          <span className="topnav-circ" aria-label="notificações">
+          <Link
+            href="/notificacoes"
+            className={"topnav-circ" + (path === "/notificacoes" ? " ativo" : "")}
+            aria-label="notificações"
+            style={{ position: "relative" }}
+          >
             <Bell size={19} />
-          </span>
+            {notifCount > 0 && <span className="notif-badge">{notifCount}</span>}
+          </Link>
         </div>
       </div>
 

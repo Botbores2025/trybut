@@ -683,3 +683,60 @@ textarea { resize: vertical; }
   color: var(--texto-fraco);
 }
 .side-btn-recusar:hover { background: var(--borda); }
+
+/* ---------- Notificações (badge no sino + página) ---------- */
+.notif-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.notif-item { padding: 0; }
+.notif-pessoa {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 10px;
+}
+.notif-texto { margin: 0; font-size: 14px; }
+.notif-btns { display: flex; gap: 8px; }
+
+/* ---------- Desfazer amizade + bloquear ---------- */
+.perfil-acoes-extra {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+.link-acao {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--texto-fraco);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.link-acao:hover { color: var(--texto); }
+.link-perigo:hover { color: #ef4444; }
+.badge-bloqueado {
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #ef4444;
+  background: #fee2e2;
+  padding: 5px 14px;
+  border-radius: 10px;
+  display: inline-block;
+}
