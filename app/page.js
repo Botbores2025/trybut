@@ -16,6 +16,7 @@ import {
   arrayRemove,
   increment,
   where,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -111,6 +112,25 @@ function Feed() {
         comentariosCount: 0,
         criadoEm: serverTimestamp(),
       });
+      // notificar amigos
+      if (amigosUids && amigosUids.length > 0) {
+        const nBatch = writeBatch(db);
+        const previa = t ? (t.length > 50 ? t.slice(0, 50) + "..." : t) : "compartilhou uma foto";
+        for (const aUid of amigosUids.slice(0, 100)) {
+          nBatch.set(doc(collection(db, "notificacoes")), {
+            tipo: "post",
+            deUid: user.uid,
+            deNome: perfil?.nome || "alguém",
+            deFoto: perfil?.fotoURL || "",
+            paraUid: aUid,
+            previa,
+            temFoto: !!fotoURL,
+            timestamp: serverTimestamp(),
+            lida: false,
+          });
+        }
+        await nBatch.commit();
+      }
       setTexto("");
       setFoto(null);
     } catch (e) {

@@ -701,7 +701,7 @@ textarea { resize: vertical; }
   justify-content: center;
   line-height: 1;
 }
-.notif-item { padding: 0; }
+.notif-item { padding: 14px 16px; }
 .notif-pessoa {
   display: flex;
   align-items: center;
