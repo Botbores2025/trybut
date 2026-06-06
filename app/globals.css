@@ -172,3 +172,160 @@ textarea { resize: vertical; }
 }
 .stat strong { display: block; font-size: 18px; }
 .stat span { font-size: 12px; color: var(--texto-fraco); }
+
+/* ---------- Foto de perfil (Cloudinary) ---------- */
+.avatar { overflow: hidden; cursor: pointer; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.link-foto {
+  margin-top: 6px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--laranja);
+  background: var(--laranja-claro);
+  border: none;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.link-foto:disabled { opacity: 0.6; cursor: default; }
+
+/* ---------- Feed + navegação (trybut rede social) ---------- */
+.conteudo { padding-bottom: 90px; }
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  margin: 0 auto;
+  max-width: 460px;
+  background: var(--branco);
+  border-top: 1px solid var(--borda);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 12px;
+  z-index: 50;
+}
+.nav-item {
+  color: var(--texto-fraco);
+  display: flex; align-items: center; justify-content: center;
+  padding: 6px; text-decoration: none;
+}
+.nav-item.ativo { color: var(--laranja); }
+.nav-plus {
+  background: var(--laranja);
+  color: #fff;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
+}
+
+.avatar-mini {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--laranja-claro);
+  color: var(--laranja);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.composer-top { display: flex; gap: 10px; }
+.composer-input {
+  border: none;
+  background: transparent;
+  resize: none;
+  padding: 6px 0;
+  min-height: 42px;
+  font-size: 15px;
+}
+.composer-input:focus { border: none; background: transparent; }
+.composer-foto-aviso { font-size: 12px; color: var(--texto-fraco); margin-top: 8px; }
+.composer-acoes {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px;
+}
+.btn-foto {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--laranja-claro);
+  color: var(--laranja);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.btn-publicar { width: auto; padding: 9px 22px; }
+
+.vazio { text-align: center; color: var(--texto-fraco); font-size: 14px; padding: 28px 12px; }
+
+.post-cabecalho { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.post-autor { font-size: 14px; font-weight: 700; margin: 0; }
+.post-tempo { font-size: 12px; color: var(--texto-fraco); margin: 0; }
+.post-texto { font-size: 14px; line-height: 1.5; margin: 0 0 10px; white-space: pre-wrap; }
+.post-imagem { width: 100%; border-radius: 12px; margin-bottom: 10px; display: block; }
+.post-acoes { display: flex; gap: 20px; }
+.post-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: none; border: none;
+  color: var(--texto-fraco);
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+.post-btn.curtido { color: var(--laranja); }
+
+.btn-sair {
+  width: 100%;
+  background: none;
+  border: 1px solid var(--borda);
+  color: var(--texto-fraco);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.btn-sair:hover { color: #d23b3b; border-color: #f0c0c0; }
+
+/* ---------- Comentários ---------- */
+.comentarios {
+  margin-top: 12px;
+  border-top: 1px solid var(--borda);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.comentario { display: flex; gap: 8px; align-items: flex-start; }
+.avatar-comentario { width: 30px; height: 30px; font-size: 13px; }
+.comentario-bolha {
+  background: var(--fundo);
+  border-radius: 12px;
+  padding: 8px 12px;
+  flex: 1;
+}
+.comentario-autor { font-size: 13px; font-weight: 700; margin: 0; }
+.comentario-texto { font-size: 13px; margin: 2px 0 0; line-height: 1.4; white-space: pre-wrap; }
+.comentario-novo { display: flex; gap: 8px; margin-top: 2px; }
+.comentario-novo input { font-size: 14px; }
+.btn-comentar {
+  background: var(--laranja);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0 16px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.btn-comentar:disabled { opacity: 0.6; cursor: default; }
