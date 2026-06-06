@@ -740,3 +740,13 @@ textarea { resize: vertical; }
   border-radius: 10px;
   display: inline-block;
 }
+
+/* ---------- Badge no balão de mensagens ---------- */
+.tab-badge {
+  top: -4px;
+  right: 50%;
+  transform: translateX(14px);
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+}

@@ -31,7 +31,9 @@ function Notificacoes() {
           getDocs(query(collection(db, "notificacoes"), where("paraUid", "==", user.uid))),
         ]);
         setSolicitacoes(sols);
-        const pn = postsSnap.docs.map((d) => ({ id: d.id, ref: d.ref, ...d.data() }));
+        const pn = postsSnap.docs
+          .map((d) => ({ id: d.id, ref: d.ref, ...d.data() }))
+          .filter((n) => n.tipo !== "mensagem");
         pn.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
         setPostNotifs(pn.slice(0, 30));
 

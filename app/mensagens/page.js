@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getDocs, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import AppShell from "@/components/AppShell";
@@ -40,6 +40,30 @@ function Mensagens() {
       }
     );
     return () => unsub();
+  }, [user]);
+
+  // marcar notificações de mensagem como lidas ao abrir a aba
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const q = query(
+          collection(db, "notificacoes"),
+          where("paraUid", "==", user.uid)
+        );
+        const snap = await getDocs(q);
+        const msgNaoLidas = snap.docs.filter(
+          (d) => d.data().tipo === "mensagem" && !d.data().lida
+        );
+        if (msgNaoLidas.length > 0) {
+          const batch = writeBatch(db);
+          for (const d of msgNaoLidas) batch.update(d.ref, { lida: true });
+          await batch.commit();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
   }, [user]);
 
   return (

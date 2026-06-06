@@ -14,7 +14,8 @@ export default function TopNav() {
   const meuPerfil = user ? `/perfil/${user.uid}` : "/perfil";
   const tab = (ativo) => "topnav-tab" + (ativo ? " ativo" : "");
   const [solCount, setSolCount] = useState(0);
-  const [postCount, setPostCount] = useState(0);
+  const [postNotifCount, setPostNotifCount] = useState(0);
+  const [msgCount, setMsgCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -22,16 +23,25 @@ export default function TopNav() {
     const q1 = query(collection(db, "solicitacoes"), where("para", "==", user.uid));
     const unsub1 = onSnapshot(q1, (snap) => setSolCount(snap.size));
 
-    // notificações de posts não lidas
+    // notificações (posts + mensagens)
     const q2 = query(collection(db, "notificacoes"), where("paraUid", "==", user.uid));
     const unsub2 = onSnapshot(q2, (snap) => {
-      setPostCount(snap.docs.filter((d) => !d.data().lida).length);
+      let posts = 0;
+      let msgs = 0;
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        if (data.lida) return;
+        if (data.tipo === "mensagem") msgs++;
+        else posts++;
+      });
+      setPostNotifCount(posts);
+      setMsgCount(msgs);
     });
 
     return () => { unsub1(); unsub2(); };
   }, [user]);
 
-  const total = solCount + postCount;
+  const bellTotal = solCount + postNotifCount;
 
   return (
     <header className="topnav">
@@ -46,13 +56,17 @@ export default function TopNav() {
           <Link href="/notificacoes" className={"topnav-circ" + (path === "/notificacoes" ? " ativo" : "")}
             aria-label="notificações" style={{ position: "relative" }}>
             <Bell size={19} />
-            {total > 0 && <span className="notif-badge">{total > 9 ? "9+" : total}</span>}
+            {bellTotal > 0 && <span className="notif-badge">{bellTotal > 9 ? "9+" : bellTotal}</span>}
           </Link>
         </div>
       </div>
       <nav className="topnav-tabs">
         <Link href="/" className={tab(path === "/")} aria-label="início"><Home size={24} /></Link>
-        <Link href="/mensagens" className={tab(path.startsWith("/mensagens"))} aria-label="mensagens"><MessageCircle size={24} /></Link>
+        <Link href="/mensagens" className={tab(path.startsWith("/mensagens"))} aria-label="mensagens"
+          style={{ position: "relative" }}>
+          <MessageCircle size={24} />
+          {msgCount > 0 && <span className="notif-badge tab-badge">{msgCount > 9 ? "9+" : msgCount}</span>}
+        </Link>
         <Link href="/comunidades" className={tab(path.startsWith("/comunidades"))} aria-label="comunidades"><Users size={24} /></Link>
         <Link href={meuPerfil} className={tab(path.startsWith("/perfil"))} aria-label="perfil"><User size={24} /></Link>
       </nav>
