@@ -98,15 +98,18 @@ function Notificacoes() {
             atividade dos amigos
           </p>
           {postNotifs.map((n) => (
-            <Link key={n.id} href="/" className="card notif-item notif-pessoa">
+            <Link key={n.id} href={n.tipo === "mensagem" ? `/mensagens/${n.deUid}` : "/"} className="card notif-item notif-pessoa">
               <div className="avatar-mini">
                 {n.deFoto ? <img src={n.deFoto} className="avatar-img" alt="" />
                   : (n.deNome || "?").charAt(0).toUpperCase()}
               </div>
               <p className="notif-texto">
                 <strong>{n.deNome || "alguém"}</strong>{" "}
-                {n.temFoto ? "compartilhou uma foto" : "publicou no feed"}
-                {n.previa && !n.temFoto ? `: "${n.previa}"` : ""}
+                {n.tipo === "mensagem"
+                  ? `te enviou uma mensagem: "${n.previa}"`
+                  : n.temFoto
+                    ? "compartilhou uma foto"
+                    : `publicou no feed: "${n.previa}"`}
               </p>
             </Link>
           ))}

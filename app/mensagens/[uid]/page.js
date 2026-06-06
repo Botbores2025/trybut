@@ -85,6 +85,17 @@ function Chat() {
         autorUid: user.uid,
         timestamp: serverTimestamp(),
       });
+      // notificar o destinatário
+      await setDoc(doc(db, "notificacoes", `msg_${user.uid}_${uid}`), {
+        tipo: "mensagem",
+        deUid: user.uid,
+        deNome: eu?.nome || "alguém",
+        deFoto: eu?.fotoURL || "",
+        paraUid: uid,
+        previa: t.length > 50 ? t.slice(0, 50) + "..." : t,
+        timestamp: serverTimestamp(),
+        lida: false,
+      });
     } catch (e) {
       console.error(e);
       alert("não consegui enviar. tenta de novo.");
