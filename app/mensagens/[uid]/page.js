@@ -108,18 +108,20 @@ function Chat() {
       </Link>
 
       <div className="chat-msgs">
-        {msgs.length === 0 && (
-          <p className="vazio">nenhuma mensagem ainda. manda a primeira!</p>
-        )}
-        {msgs.map((m) => (
-          <div
-            key={m.id}
-            className={"msg " + (m.autorUid === user.uid ? "msg-minha" : "msg-dele")}
-          >
-            {m.texto}
-          </div>
-        ))}
-        <div ref={fimRef} />
+        <div className="chat-msgs-inner">
+          {msgs.length === 0 && (
+            <p className="vazio">nenhuma mensagem ainda. manda a primeira!</p>
+          )}
+          {msgs.map((m) => (
+            <div
+              key={m.id}
+              className={"msg " + (m.autorUid === user.uid ? "msg-minha" : "msg-dele")}
+            >
+              {m.texto}
+            </div>
+          ))}
+          <div ref={fimRef} />
+        </div>
       </div>
 
       <div className="chat-input-bar">
