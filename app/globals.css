@@ -647,3 +647,39 @@ textarea { resize: vertical; }
   color: var(--laranja);
   margin: 0 0 2px;
 }
+
+/* ---------- Sistema de amizade ---------- */
+.badge-amigos {
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #16a34a;
+  background: #dcfce7;
+  padding: 5px 14px;
+  border-radius: 10px;
+  display: inline-block;
+}
+.side-solicitacao { margin-bottom: 8px; }
+.side-sol-btns { display: flex; gap: 6px; padding: 4px 12px 0; }
+.side-btn-aceitar {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--laranja);
+  color: #fff;
+}
+.side-btn-aceitar:hover { background: var(--laranja-escuro); }
+.side-btn-recusar {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--fundo);
+  color: var(--texto-fraco);
+}
+.side-btn-recusar:hover { background: var(--borda); }

@@ -15,10 +15,12 @@ import {
   arrayUnion,
   arrayRemove,
   increment,
+  where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { uploadCloudinary } from "@/lib/cloudinary";
+import { buscarAmigosUids } from "@/lib/social";
 import AppShell from "@/components/AppShell";
 import Link from "next/link";
 import { Heart, MessageCircle, Image as ImageIcon } from "lucide-react";
@@ -59,6 +61,7 @@ function Feed() {
   const [foto, setFoto] = useState(null);
   const [posts, setPosts] = useState([]);
   const [enviando, setEnviando] = useState(false);
+  const [amigosUids, setAmigosUids] = useState(null);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -69,12 +72,26 @@ function Feed() {
   }, [user]);
 
   useEffect(() => {
-    const q = query(collection(db, "posts"), orderBy("criadoEm", "desc"), limit(50));
+    if (!user) return;
+    buscarAmigosUids(user.uid).then((uids) => setAmigosUids(uids));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || amigosUids === null) return;
+    const uids = [user.uid, ...amigosUids].slice(0, 30);
+    let q;
+    if (uids.length === 1) {
+      q = query(collection(db, "posts"), where("autorUid", "==", uids[0]));
+    } else {
+      q = query(collection(db, "posts"), where("autorUid", "in", uids));
+    }
     const unsub = onSnapshot(q, (snap) => {
-      setPosts(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const lista = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      lista.sort((a, b) => (b.criadoEm?.seconds || 0) - (a.criadoEm?.seconds || 0));
+      setPosts(lista);
     });
     return () => unsub();
-  }, []);
+  }, [user, amigosUids]);
 
   async function publicar() {
     if (!user) return;

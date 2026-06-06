@@ -20,28 +20,26 @@ function Buscar() {
   const { user } = useAuth();
   const [termo, setTermo] = useState("");
   const [usuarios, setUsuarios] = useState([]);
-  const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
         const snap = await getDocs(query(collection(db, "usuarios"), limit(200)));
-        const lista = snap.docs
-          .map((d) => ({ uid: d.id, ...d.data() }))
-          .filter((u) => u.uid !== user?.uid);
-        setUsuarios(lista);
+        setUsuarios(
+          snap.docs
+            .map((d) => ({ uid: d.id, ...d.data() }))
+            .filter((u) => u.uid !== user?.uid)
+        );
       } catch (e) {
         console.error(e);
-      } finally {
-        setCarregando(false);
       }
     })();
   }, [user]);
 
   const t = termo.trim().toLowerCase();
-  const filtrados = t
+  const filtrados = t.length >= 2
     ? usuarios.filter((u) => (u.nome || "").toLowerCase().includes(t))
-    : usuarios;
+    : [];
 
   return (
     <>
@@ -49,18 +47,22 @@ function Buscar() {
         <Search size={18} />
         <input
           className="busca-input"
-          placeholder="buscar pessoas..."
+          placeholder="buscar pessoas pelo nome..."
           value={termo}
           onChange={(e) => setTermo(e.target.value)}
         />
       </div>
 
-      {carregando && <p className="vazio">carregando...</p>}
+      {t.length === 0 && (
+        <p className="vazio">digite o nome de alguém para encontrar.</p>
+      )}
 
-      {!carregando && filtrados.length === 0 && (
-        <p className="vazio">
-          {termo ? "ninguém encontrado com esse nome." : "ninguém por aqui ainda."}
-        </p>
+      {t.length === 1 && (
+        <p className="vazio">continue digitando...</p>
+      )}
+
+      {t.length >= 2 && filtrados.length === 0 && (
+        <p className="vazio">ninguém encontrado com esse nome.</p>
       )}
 
       {filtrados.map((u) => (
