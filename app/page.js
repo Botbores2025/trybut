@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   doc,
   getDoc,
+  getDocs,
   updateDoc,
   arrayUnion,
   arrayRemove,
@@ -63,6 +64,7 @@ function Feed() {
   const [posts, setPosts] = useState([]);
   const [enviando, setEnviando] = useState(false);
   const [amigosUids, setAmigosUids] = useState(null);
+  const [stories, setStories] = useState([]);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -76,6 +78,33 @@ function Feed() {
     if (!user) return;
     buscarAmigosUids(user.uid).then((uids) => setAmigosUids(uids));
   }, [user]);
+
+  // carregar stories das últimas 24h (amigos + eu)
+  useEffect(() => {
+    if (!user || amigosUids === null) return;
+    const uids = [user.uid, ...amigosUids];
+    (async () => {
+      try {
+        const snap = await getDocs(collection(db, "stories"));
+        const agora = Date.now() / 1000;
+        const recentes = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .filter((s) => s.criadoEm?.seconds > agora - 86400 && uids.includes(s.autorUid));
+        const porAutor = {};
+        recentes.forEach((s) => {
+          if (!porAutor[s.autorUid] || s.criadoEm.seconds > porAutor[s.autorUid].criadoEm.seconds) {
+            porAutor[s.autorUid] = s;
+          }
+        });
+        const lista = Object.values(porAutor).sort((a, b) => {
+          if (a.autorUid === user.uid) return -1;
+          if (b.autorUid === user.uid) return 1;
+          return (b.criadoEm?.seconds || 0) - (a.criadoEm?.seconds || 0);
+        });
+        setStories(lista);
+      } catch (e) { console.error(e); }
+    })();
+  }, [user, amigosUids]);
 
   useEffect(() => {
     if (!user || amigosUids === null) return;
@@ -143,6 +172,32 @@ function Feed() {
 
   return (
     <>
+      {/* barra de stories */}
+      <div className="stories-bar">
+        <Link href="/stories/criar" className="story-item">
+          <div className="story-circle story-criar">
+            <Inicial nome={perfil?.nome} foto={perfil?.fotoURL} />
+          </div>
+          <p className="story-nome">criar</p>
+        </Link>
+        {stories.filter((s) => s.autorUid !== user.uid).map((s) => (
+          <Link key={s.autorUid} href={`/stories/${s.autorUid}`} className="story-item">
+            <div className="story-circle">
+              <Inicial nome={s.autorNome} foto={s.autorFoto} />
+            </div>
+            <p className="story-nome">{(s.autorNome || "amigo").split(" ")[0]}</p>
+          </Link>
+        ))}
+        {stories.find((s) => s.autorUid === user.uid) && (
+          <Link href={`/stories/${user.uid}`} className="story-item">
+            <div className="story-circle story-meu">
+              <Inicial nome={perfil?.nome} foto={perfil?.fotoURL} />
+            </div>
+            <p className="story-nome">meu story</p>
+          </Link>
+        )}
+      </div>
+
       <section className="card composer">
         <div className="composer-top">
           <Inicial nome={perfil?.nome} foto={perfil?.fotoURL} />
