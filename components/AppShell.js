@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import BottomNav from "@/components/BottomNav";
+import TopNav from "@/components/TopNav";
+import SidebarEsq from "@/components/SidebarEsq";
+import SidebarDir from "@/components/SidebarDir";
 
 export default function AppShell({ children }) {
   const { user, carregando } = useAuth();
@@ -24,13 +25,12 @@ export default function AppShell({ children }) {
 
   return (
     <>
-      <header className="topo">
-        <Link href="/" className="logo logo-topo" style={{ textDecoration: "none" }}>
-          trybut
-        </Link>
-      </header>
-      <main className="conteudo">{children}</main>
-      <BottomNav />
+      <TopNav />
+      <div className="layout">
+        <SidebarEsq />
+        <main className="conteudo">{children}</main>
+        <SidebarDir />
+      </div>
     </>
   );
 }

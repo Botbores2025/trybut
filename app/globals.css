@@ -362,3 +362,231 @@ textarea { resize: vertical; }
   color: inherit;
 }
 .post-cabecalho-link:hover .post-autor { color: var(--laranja); }
+
+/* ---------- Buscar pessoas ---------- */
+.busca-barra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: var(--texto-fraco);
+}
+.busca-input {
+  border: none;
+  background: transparent;
+  flex: 1;
+  font-size: 15px;
+  outline: none;
+  padding: 0;
+  width: auto;
+}
+.busca-input:focus { border: none; background: transparent; }
+.pessoa-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.pessoa-item:hover .pessoa-nome { color: var(--laranja); }
+.pessoa-nome { font-size: 15px; font-weight: 700; margin: 0; }
+.pessoa-cidade { font-size: 13px; color: var(--texto-fraco); margin: 0; }
+
+/* ---------- Navegação no topo (estilo Facebook) ---------- */
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--branco);
+  border-bottom: 1px solid var(--borda);
+}
+.topnav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.topnav-icones { display: flex; gap: 8px; }
+.topnav-circ {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--fundo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--texto-fraco);
+  text-decoration: none;
+}
+.topnav-circ.ativo { color: var(--laranja); }
+.topnav-tabs {
+  display: flex;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.topnav-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 6px;
+  color: var(--texto-fraco);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+.topnav-tab.ativo {
+  color: var(--laranja);
+  border-bottom-color: var(--laranja);
+}
+
+/* sem barra embaixo agora, então tira o espaço extra */
+.conteudo { padding-bottom: 24px; }
+
+/* ---------- Layout de 3 colunas (estilo Facebook no desktop) ---------- */
+.layout {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.layout .conteudo {
+  flex: 1 1 auto;
+  max-width: 520px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 84px;
+  align-self: flex-start;
+}
+.side-perfil,
+.side-link,
+.side-pessoa {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--texto);
+  font-size: 14px;
+}
+.side-perfil { font-weight: 700; margin-bottom: 4px; }
+.side-link { font-weight: 600; }
+.side-perfil:hover,
+.side-link:hover,
+.side-pessoa:hover { background: var(--branco); }
+.side-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texto-fraco);
+  padding: 0 12px;
+  margin-bottom: 6px;
+}
+.side-vazio { color: var(--texto-fraco); font-size: 13px; padding: 0 12px; }
+
+/* No celular: some as barras, fica só o feed centralizado */
+@media (max-width: 980px) {
+  .sidebar { display: none; }
+  .layout { display: block; padding: 16px; }
+  .layout .conteudo { max-width: 520px; margin: 0 auto; }
+}
+
+/* ---------- Chat / mensagens diretas ---------- */
+.chat {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 170px);
+  min-height: 380px;
+}
+.chat-topo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--borda);
+  text-decoration: none;
+  color: var(--texto);
+}
+.chat-nome { font-weight: 700; font-size: 15px; }
+.chat-msgs {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 2px;
+}
+.msg {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+.msg-minha {
+  align-self: flex-end;
+  background: var(--laranja);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.msg-dele {
+  align-self: flex-start;
+  background: #eceef1;
+  color: var(--texto);
+  border-bottom-left-radius: 4px;
+}
+.chat-input-bar {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--borda);
+}
+.chat-input { flex: 1; }
+.chat-enviar {
+  background: var(--laranja);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.chat-enviar:hover { background: var(--laranja-escuro); }
+.conversa-previa {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.perfil-botoes { display: flex; gap: 8px; margin-top: 6px; align-items: center; }
+.perfil-botoes .btn-seguir { margin-top: 0; }
+.btn-msg {
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--laranja);
+  background: var(--laranja-claro);
+  border: none;
+  padding: 7px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-msg:hover { background: #ffe0cc; }

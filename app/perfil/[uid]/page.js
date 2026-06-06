@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { uploadCloudinary } from "@/lib/cloudinary";
 import { checarSeguindo, seguir, deixarDeSeguir } from "@/lib/social";
 import AppShell from "@/components/AppShell";
+import Link from "next/link";
 
 export default function PerfilPage() {
   return (
@@ -151,13 +152,18 @@ function Perfil() {
                 {enviandoFoto ? "enviando..." : "trocar foto"}
               </button>
             ) : (
-              <button
-                className={"btn-seguir" + (seguindo ? " seguindo" : "")}
-                onClick={alternarSeguir}
-                disabled={carregandoSeguir}
-              >
-                {seguindo ? "seguindo" : "seguir"}
-              </button>
+              <div className="perfil-botoes">
+                <button
+                  className={"btn-seguir" + (seguindo ? " seguindo" : "")}
+                  onClick={alternarSeguir}
+                  disabled={carregandoSeguir}
+                >
+                  {seguindo ? "seguindo" : "seguir"}
+                </button>
+                <Link href={`/mensagens/${uid}`} className="btn-msg">
+                  mensagem
+                </Link>
+              </div>
             )}
           </div>
         </div>
