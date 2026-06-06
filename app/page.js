@@ -20,6 +20,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { uploadCloudinary } from "@/lib/cloudinary";
 import AppShell from "@/components/AppShell";
+import Link from "next/link";
 import { Heart, MessageCircle, Image as ImageIcon } from "lucide-react";
 
 export default function FeedPage() {
@@ -200,13 +201,13 @@ function Post({ post, user, meuPerfil }) {
 
   return (
     <article className="card post">
-      <div className="post-cabecalho">
+      <Link href={`/perfil/${post.autorUid}`} className="post-cabecalho post-cabecalho-link">
         <Inicial nome={post.autorNome} foto={post.autorFoto} />
         <div>
           <p className="post-autor">{post.autorNome}</p>
           <p className="post-tempo">{tempoRelativo(post.criadoEm)}</p>
         </div>
-      </div>
+      </Link>
       {post.texto && <p className="post-texto">{post.texto}</p>}
       {post.fotoURL && <img src={post.fotoURL} alt="" className="post-imagem" />}
 

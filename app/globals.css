@@ -329,3 +329,36 @@ textarea { resize: vertical; }
   flex-shrink: 0;
 }
 .btn-comentar:disabled { opacity: 0.6; cursor: default; }
+
+/* ---------- Perfil dos outros + seguir ---------- */
+.btn-seguir {
+  margin-top: 6px;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+  background: var(--laranja);
+  border: none;
+  padding: 7px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.btn-seguir:hover { background: var(--laranja-escuro); }
+.btn-seguir.seguindo {
+  background: var(--laranja-claro);
+  color: var(--laranja);
+}
+.btn-seguir:disabled { opacity: 0.6; cursor: default; }
+
+.perfil-bio {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--texto);
+  margin-top: 14px;
+}
+
+.post-cabecalho-link {
+  text-decoration: none;
+  color: inherit;
+}
+.post-cabecalho-link:hover .post-autor { color: var(--laranja); }

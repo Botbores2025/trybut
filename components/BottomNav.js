@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { Home, Search, Users, User, Plus } from "lucide-react";
 
 export default function BottomNav() {
   const path = usePathname();
+  const { user } = useAuth();
   const cls = (href) => "nav-item" + (path === href ? " ativo" : "");
+  const meuPerfil = user ? `/perfil/${user.uid}` : "/perfil";
 
   return (
     <nav className="bottom-nav">
@@ -22,7 +25,7 @@ export default function BottomNav() {
       <Link href="/comunidades" className={cls("/comunidades")} aria-label="comunidades">
         <Users size={24} />
       </Link>
-      <Link href="/perfil" className={cls("/perfil")} aria-label="perfil">
+      <Link href={meuPerfil} className={"nav-item" + (path.startsWith("/perfil") ? " ativo" : "")} aria-label="perfil">
         <User size={24} />
       </Link>
     </nav>
