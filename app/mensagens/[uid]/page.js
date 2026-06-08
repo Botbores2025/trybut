@@ -31,6 +31,7 @@ function Chat() {
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [outroDigitando, setOutroDigitando] = useState(false);
   const [gravando, setGravando] = useState(false);
+  const [tempoGravando, setTempoGravando] = useState(0);
   const [enviandoAudio, setEnviandoAudio] = useState(false);
   const fimRef = useRef(null);
   const fotoRef = useRef(null);
@@ -38,6 +39,7 @@ function Chat() {
   const ultimoDigitando = useRef(0);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const timerRef = useRef(null);
 
   const cid = user && uid ? idConversa(user.uid, uid) : null;
 
@@ -50,27 +52,23 @@ function Chat() {
   useEffect(() => {
     if (!cid) return;
     const q = query(collection(db, "conversas", cid, "mensagens"), orderBy("timestamp", "asc"));
-    const unsub = onSnapshot(q, (snap) => {
-      setMsgs(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    });
-    return () => unsub();
+    return onSnapshot(q, (snap) => { setMsgs(snap.docs.map((d) => ({ id: d.id, ...d.data() }))); });
   }, [cid]);
 
   useEffect(() => {
     if (!cid || !uid) return;
-    const unsub = onSnapshot(doc(db, "conversas", cid), (snap) => {
+    return onSnapshot(doc(db, "conversas", cid), (snap) => {
       if (!snap.exists()) return;
-      const dig = snap.data().digitando || {};
-      const ts = dig[uid];
+      const ts = (snap.data().digitando || {})[uid];
       setOutroDigitando(ts?.seconds ? Date.now() / 1000 - ts.seconds < 5 : false);
     });
-    return () => unsub();
   }, [cid, uid]);
 
   useEffect(() => { fimRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, outroDigitando]);
 
   useEffect(() => {
     return () => {
+      clearInterval(timerRef.current);
       if (cid && user) updateDoc(doc(db, "conversas", cid), { [`digitando.${user.uid}`]: deleteField() }).catch(() => {});
     };
   }, [cid, user]);
@@ -78,9 +76,8 @@ function Chat() {
   function aoDigitar(e) {
     setTexto(e.target.value);
     if (!cid || !user) return;
-    const agora = Date.now();
-    if (agora - ultimoDigitando.current > 2000) {
-      ultimoDigitando.current = agora;
+    if (Date.now() - ultimoDigitando.current > 2000) {
+      ultimoDigitando.current = Date.now();
       setDoc(doc(db, "conversas", cid), { digitando: { [user.uid]: serverTimestamp() } }, { merge: true }).catch(() => {});
     }
     clearTimeout(digitandoTimeout.current);
@@ -105,7 +102,6 @@ function Chat() {
           [uid]: { nome: alvo?.nome || "", foto: alvo?.fotoURL || "" },
         },
         ultimaMensagem: previa, ultimoAutor: user.uid, timestamp: serverTimestamp(),
-        [`digitando.${user.uid}`]: deleteField(),
       }, { merge: true });
       const msgData = { texto: t || "", tipo: tipo || "texto", autorUid: user.uid, timestamp: serverTimestamp() };
       if (fotoURL) msgData.fotoURL = fotoURL;
@@ -116,7 +112,7 @@ function Chat() {
         deFoto: eu?.fotoURL || "", paraUid: uid, previa,
         timestamp: serverTimestamp(), lida: false,
       });
-    } catch (e) { console.error(e); alert("não consegui enviar. tenta de novo."); }
+    } catch (e) { console.error("erro ao enviar:", e); alert("não consegui enviar. tenta de novo."); }
   }
 
   function enviar() { const t = texto.trim(); if (t) enviarMsg(t, "texto"); }
@@ -126,41 +122,82 @@ function Chat() {
     const file = e.target.files?.[0]; e.target.value = "";
     if (!file) return;
     setEnviandoFoto(true);
-    try { const url = await uploadCloudinary(file); await enviarMsg("", "foto", url); }
+    try { await enviarMsg("", "foto", await uploadCloudinary(file)); }
     catch (err) { console.error(err); alert("não consegui enviar a foto."); }
     finally { setEnviandoFoto(false); }
   }
 
   async function toggleGravar() {
-    if (gravando) { mediaRecorderRef.current?.stop(); return; }
+    if (gravando) {
+      mediaRecorderRef.current?.stop();
+      clearInterval(timerRef.current);
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const options = MediaRecorder.isTypeSupported("audio/webm") ? { mimeType: "audio/webm" } : {};
       const mr = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mr;
       chunksRef.current = [];
-      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
       mr.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
+        clearInterval(timerRef.current);
+        setTempoGravando(0);
         setGravando(false);
+
+        if (chunksRef.current.length === 0) {
+          alert("nenhum áudio gravado. tenta de novo.");
+          return;
+        }
+
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
+        console.log("audio blob:", blob.size, "bytes, type:", blob.type);
+
+        if (blob.size < 100) {
+          alert("áudio muito curto. tenta de novo.");
+          return;
+        }
+
         setEnviandoAudio(true);
         try {
           const dataUrl = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
+            reader.onerror = () => reject(new Error("erro ao converter áudio"));
             reader.readAsDataURL(blob);
           });
+
+          console.log("audio dataUrl length:", dataUrl.length);
+
+          if (!dataUrl || !dataUrl.startsWith("data:")) {
+            throw new Error("conversão do áudio falhou");
+          }
+
           await enviarMsg("", "audio", null, dataUrl);
-        } catch (e) { console.error(e); alert("não consegui enviar o áudio."); }
-        finally { setEnviandoAudio(false); }
+        } catch (e) {
+          console.error("erro audio:", e);
+          alert("não consegui enviar o áudio. tenta de novo.");
+        } finally {
+          setEnviandoAudio(false);
+        }
       };
-      mr.start();
+
+      mr.start(100); // coleta dados a cada 100ms
       setGravando(true);
+      setTempoGravando(0);
+      timerRef.current = setInterval(() => setTempoGravando((t) => t + 1), 1000);
+
       // limite de 60 segundos
       setTimeout(() => { if (mr.state === "recording") mr.stop(); }, 60000);
-    } catch (e) { console.error(e); alert("não consegui acessar o microfone. permita o acesso."); }
+    } catch (e) {
+      console.error("mic erro:", e);
+      alert("não consegui acessar o microfone. permita o acesso nas configurações do navegador.");
+    }
   }
 
   if (!alvo) return <p className="vazio">carregando...</p>;
@@ -182,18 +219,22 @@ function Chat() {
           {msgs.map((m) => {
             const minha = m.autorUid === user.uid;
             if (m.tipo === "figurinha") return <div key={m.id} className={"msg-figurinha " + (minha ? "msg-minha" : "msg-dele")}><span className="figurinha">{m.texto}</span></div>;
-            if (m.tipo === "foto") return (
+            if (m.tipo === "foto" && m.fotoURL) return (
               <div key={m.id} className={"msg msg-foto-wrap " + (minha ? "msg-minha" : "msg-dele")}>
                 <img src={m.fotoURL} alt="" className="msg-foto" onClick={() => setFotoAmpliada(m.fotoURL)} />
-                {m.texto && <p className="msg-foto-legenda">{m.texto}</p>}
               </div>
             );
-            if (m.tipo === "audio" && m.audioURL) return (
+            if (m.tipo === "audio") return (
               <div key={m.id} className={"msg msg-audio-wrap " + (minha ? "msg-minha" : "msg-dele")}>
-                <audio src={m.audioURL} controls preload="metadata" className="msg-audio" />
+                {m.audioURL ? (
+                  <audio src={m.audioURL} controls preload="metadata" className="msg-audio" />
+                ) : (
+                  <span className="msg-audio-erro">áudio indisponível</span>
+                )}
               </div>
             );
-            return <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>{m.texto}</div>;
+            if (m.texto) return <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>{m.texto}</div>;
+            return null;
           })}
           {outroDigitando && <p className="digitando-indicator">digitando...</p>}
           <div ref={fimRef} />
@@ -201,16 +242,25 @@ function Chat() {
       </div>
 
       {pickerAberto && <StickerPicker onSelect={enviarFigurinha} />}
+
       <div className="chat-input-bar">
         <button className="chat-sticker-btn" onClick={() => setPickerAberto(!pickerAberto)} aria-label="figurinhas"><Smile size={22} /></button>
         <button className="chat-sticker-btn" onClick={() => fotoRef.current?.click()} disabled={enviandoFoto} aria-label="foto"><ImageIcon size={22} /></button>
         <input ref={fotoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={enviarFoto} />
-        <input className="chat-input" placeholder="mensagem..." value={texto} onChange={aoDigitar}
-          onKeyDown={(e) => { if (e.key === "Enter") enviar(); }} onFocus={() => setPickerAberto(false)} />
+        {gravando ? (
+          <div className="gravando-info">
+            <span className="gravando-dot" />
+            <span className="gravando-tempo">{tempoGravando}s</span>
+          </div>
+        ) : (
+          <input className="chat-input" placeholder="mensagem..." value={texto} onChange={aoDigitar}
+            onKeyDown={(e) => { if (e.key === "Enter") enviar(); }} onFocus={() => setPickerAberto(false)} />
+        )}
         <button className={"chat-mic-btn" + (gravando ? " gravando" : "")} onClick={toggleGravar}
           disabled={enviandoAudio} aria-label={gravando ? "parar" : "gravar"}>{gravando ? <Square size={18} /> : <Mic size={20} />}</button>
-        <button className="chat-enviar" onClick={enviar} aria-label="enviar"><Send size={20} /></button>
+        {!gravando && <button className="chat-enviar" onClick={enviar} aria-label="enviar"><Send size={20} /></button>}
       </div>
+
       {fotoAmpliada && (
         <div className="foto-overlay" onClick={() => setFotoAmpliada(null)}>
           <button className="foto-fechar" onClick={() => setFotoAmpliada(null)}><X size={24} /></button>
