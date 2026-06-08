@@ -15,6 +15,7 @@ import {
   desfazerAmizade, bloquear, desbloquear,
 } from "@/lib/social";
 import AppShell from "@/components/AppShell";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function PerfilPage() {
   return <AppShell><Perfil /></AppShell>;
@@ -30,6 +31,7 @@ function Perfil() {
   const [posts, setPosts] = useState([]);
   const [relacao, setRelacao] = useState(null);
   const [carregandoAcao, setCarregandoAcao] = useState(false);
+  const [confirmacao, setConfirmacao] = useState(null);
 
   const [nome, setNome] = useState("");
   const [cidade, setCidade] = useState("");
@@ -102,12 +104,20 @@ function Perfil() {
         await recusarSolicitacao(user.uid, uid);
         setRelacao("nenhuma");
       } else if (tipo === "desfazer") {
-        if (!confirm("tem certeza que quer desfazer a amizade?")) { setCarregandoAcao(false); return; }
+        setConfirmacao("desfazer");
+        setCarregandoAcao(false);
+        return;
+      } else if (tipo === "bloquear") {
+        setConfirmacao("bloquear");
+        setCarregandoAcao(false);
+        return;
+      } else if (tipo === "confirmar-desfazer") {
+        setConfirmacao(null);
         await desfazerAmizade(user.uid, uid);
         setRelacao("nenhuma");
         setPerfil((p) => ({ ...p, amigosCount: Math.max((p.amigosCount || 1) - 1, 0) }));
-      } else if (tipo === "bloquear") {
-        if (!confirm("tem certeza que quer bloquear essa pessoa?")) { setCarregandoAcao(false); return; }
+      } else if (tipo === "confirmar-bloquear") {
+        setConfirmacao(null);
         await bloquear(user.uid, uid);
         setRelacao("bloqueado");
       } else if (tipo === "desbloquear") {
@@ -229,6 +239,16 @@ function Perfil() {
 
       {ehMeu && (
         <button className="btn-sair" onClick={() => signOut(auth)}>sair da conta</button>
+      )}
+
+      {confirmacao && (
+        <ConfirmModal
+          mensagem={confirmacao === "desfazer"
+            ? "tem certeza que quer desfazer a amizade?"
+            : "tem certeza que quer bloquear essa pessoa?"}
+          onConfirmar={() => acaoAmizade(`confirmar-${confirmacao}`)}
+          onCancelar={() => setConfirmacao(null)}
+        />
       )}
     </>
   );

@@ -26,6 +26,7 @@ import { useAuth } from "@/context/AuthContext";
 import { uploadCloudinary } from "@/lib/cloudinary";
 import { buscarAmigosUids } from "@/lib/social";
 import AppShell from "@/components/AppShell";
+import ConfirmModal from "@/components/ConfirmModal";
 import Link from "next/link";
 import { Heart, MessageCircle, Image as ImageIcon, Trash2 } from "lucide-react";
 
@@ -269,6 +270,7 @@ function Post({ post, user, meuPerfil }) {
   const totalReacoes = Object.values(contagem).reduce((a, b) => a + b, 0);
 
   const [pickerAberto, setPickerAberto] = useState(false);
+  const [confirmApagar, setConfirmApagar] = useState(false);
   const [aberto, setAberto] = useState(false);
   const [comentarios, setComentarios] = useState([]);
   const [novo, setNovo] = useState("");
@@ -328,7 +330,7 @@ function Post({ post, user, meuPerfil }) {
   }
 
   async function apagar() {
-    if (!confirm("tem certeza que quer apagar esse post?")) return;
+    setConfirmApagar(false);
     try {
       await deleteDoc(doc(db, "posts", post.id));
     } catch (e) {
@@ -348,11 +350,19 @@ function Post({ post, user, meuPerfil }) {
           </div>
         </Link>
         {post.autorUid === user.uid && (
-          <button className="post-apagar" onClick={apagar} title="apagar post">
+          <button className="post-apagar" onClick={() => setConfirmApagar(true)} title="apagar post">
             <Trash2 size={16} />
           </button>
         )}
       </div>
+
+      {confirmApagar && (
+        <ConfirmModal
+          mensagem="tem certeza que quer apagar esse post?"
+          onConfirmar={apagar}
+          onCancelar={() => setConfirmApagar(false)}
+        />
+      )}
       {post.texto && <p className="post-texto">{post.texto}</p>}
       {post.fotoURL && <img src={post.fotoURL} alt="" className="post-imagem" />}
 

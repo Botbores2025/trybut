@@ -1063,3 +1063,54 @@ textarea { resize: vertical; }
   from { opacity: 0; transform: translateX(-50%) translateY(20px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+/* ---------- Modal de confirmação ---------- */
+.confirm-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 20px;
+}
+.confirm-modal {
+  background: var(--branco);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+.confirm-msg {
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--texto);
+}
+.confirm-btns {
+  display: flex;
+  gap: 10px;
+}
+.confirm-btn {
+  flex: 1;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.confirm-btn.cancelar {
+  background: var(--fundo);
+  color: var(--texto-fraco);
+}
+.confirm-btn.cancelar:hover { background: var(--borda); }
+.confirm-btn.confirmar {
+  background: var(--laranja);
+  color: #fff;
+}
+.confirm-btn.confirmar:hover { background: var(--laranja-escuro); }
