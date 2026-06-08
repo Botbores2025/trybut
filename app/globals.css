@@ -1114,3 +1114,40 @@ textarea { resize: vertical; }
   color: #fff;
 }
 .confirm-btn.confirmar:hover { background: var(--laranja-escuro); }
+
+/* ---------- Modo escuro ---------- */
+[data-theme="dark"] {
+  --laranja: #f4621f;
+  --laranja-claro: #3d2415;
+  --laranja-escuro: #ff7a3d;
+  --texto: #ece4dc;
+  --texto-fraco: #8a827a;
+  --borda: #302a24;
+  --fundo: #181410;
+  --branco: #221e18;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] textarea {
+  background: #1a1612;
+  border-color: #302a24;
+  color: #ece4dc;
+}
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus {
+  background: #221e18;
+  border-color: var(--laranja);
+}
+[data-theme="dark"] .msg-dele { background: #302a24 !important; color: #ece4dc; }
+[data-theme="dark"] .badge-amigos { background: #1a3a1a; color: #4ade80; }
+[data-theme="dark"] .badge-bloqueado { background: #3a1a1a; color: #f87171; }
+[data-theme="dark"] .confirm-modal { background: #2a2420; }
+[data-theme="dark"] .sticker-picker { background: #2a2420; border-color: #3a3430; }
+[data-theme="dark"] .reacoes-picker { background: #2a2420; border-color: #3a3430; }
+[data-theme="dark"] .story-texto-bg {
+  background: linear-gradient(135deg, #d24e10, #8a3010);
+}
+[data-theme="dark"] .erro { background: #3a1a1a; color: #f87171; }
+[data-theme="dark"] .toast-msg { background: #ece4dc; color: #181410; }
+[data-theme="dark"] .foto-overlay { background: rgba(0, 0, 0, 0.95); }
+[data-theme="dark"] .busca-input { color: #ece4dc; }
+[data-theme="dark"] .composer-input { color: #ece4dc; }

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Home, MessageCircle, Users, User, Search, Bell } from "lucide-react";
+import { Home, MessageCircle, Users, User, Search, Bell, Moon, Sun } from "lucide-react";
 
 export default function TopNav() {
   const path = usePathname();
@@ -16,18 +16,35 @@ export default function TopNav() {
   const [solCount, setSolCount] = useState(0);
   const [postNotifCount, setPostNotifCount] = useState(0);
   const [msgCount, setMsgCount] = useState(0);
+  const [escuro, setEscuro] = useState(false);
+
+  useEffect(() => {
+    const salvo = localStorage.getItem("trybut-tema");
+    if (salvo === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+      setEscuro(true);
+    }
+  }, []);
+
+  function toggleTema() {
+    const novo = !escuro;
+    setEscuro(novo);
+    if (novo) {
+      document.documentElement.setAttribute("data-theme", "dark");
+      localStorage.setItem("trybut-tema", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      localStorage.setItem("trybut-tema", "light");
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
-    // solicitações de amizade
     const q1 = query(collection(db, "solicitacoes"), where("para", "==", user.uid));
     const unsub1 = onSnapshot(q1, (snap) => setSolCount(snap.size));
-
-    // notificações (posts + mensagens)
     const q2 = query(collection(db, "notificacoes"), where("paraUid", "==", user.uid));
     const unsub2 = onSnapshot(q2, (snap) => {
-      let posts = 0;
-      let msgs = 0;
+      let posts = 0, msgs = 0;
       snap.docs.forEach((d) => {
         const data = d.data();
         if (data.lida) return;
@@ -37,7 +54,6 @@ export default function TopNav() {
       setPostNotifCount(posts);
       setMsgCount(msgs);
     });
-
     return () => { unsub1(); unsub2(); };
   }, [user]);
 
@@ -46,10 +62,11 @@ export default function TopNav() {
   return (
     <header className="topnav">
       <div className="topnav-bar">
-        <Link href="/" className="logo logo-topo" style={{ textDecoration: "none" }}>
-          trybut
-        </Link>
+        <Link href="/" className="logo logo-topo" style={{ textDecoration: "none" }}>trybut</Link>
         <div className="topnav-icones">
+          <button className="topnav-circ" onClick={toggleTema} aria-label="modo escuro">
+            {escuro ? <Sun size={19} /> : <Moon size={19} />}
+          </button>
           <Link href="/buscar" className={"topnav-circ" + (path === "/buscar" ? " ativo" : "")} aria-label="buscar">
             <Search size={19} />
           </Link>
