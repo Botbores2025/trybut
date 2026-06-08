@@ -854,3 +854,68 @@ textarea { resize: vertical; }
   font-size: 14px;
   line-height: 1.5;
 }
+
+/* ---------- Figurinhas ---------- */
+.chat-sticker-btn {
+  background: none;
+  border: none;
+  color: var(--texto-fraco);
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.chat-sticker-btn:hover { color: var(--laranja); }
+.sticker-picker {
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  padding: 8px;
+  margin-bottom: 6px;
+}
+.sticker-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--borda);
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  overflow-x: auto;
+}
+.sticker-tab {
+  background: none;
+  border: none;
+  font-size: 20px;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.sticker-tab.ativo { background: var(--laranja-claro); }
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+.sticker-item {
+  background: none;
+  border: none;
+  font-size: 28px;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 8px;
+  text-align: center;
+}
+.sticker-item:hover { background: var(--fundo); }
+.msg-figurinha {
+  padding: 2px;
+  background: none !important;
+}
+.figurinha {
+  font-size: 36px;
+  line-height: 1;
+}
+@media (max-width: 600px) {
+  .sticker-grid { grid-template-columns: repeat(6, 1fr); }
+  .sticker-item { font-size: 24px; padding: 5px; }
+}
