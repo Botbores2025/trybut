@@ -1226,12 +1226,45 @@ textarea { resize: vertical; }
   50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
 }
 .msg-audio-wrap { padding: 6px 10px !important; }
-.msg-audio {
-  max-width: 220px;
-  width: 100%;
-  height: 36px;
-  border-radius: 18px;
+.msg-audio { max-width: 220px; width: 100%; height: 36px; border-radius: 18px; }
+.msg-audio-custom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px !important;
+  min-width: 160px;
 }
+.audio-play-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+  line-height: 1;
+}
+.audio-wave {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+  min-width: 60px;
+  overflow: hidden;
+}
+.msg-dele .audio-wave { background: rgba(0,0,0,0.12); }
+.audio-wave-fill {
+  width: 0%;
+  height: 100%;
+  background: rgba(255,255,255,0.7);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+.msg-dele .audio-wave-fill { background: rgba(0,0,0,0.3); }
+.audio-wave-fill.tocando {
+  width: 100%;
+  transition: width 3s linear;
+}
+.audio-label { font-size: 11px; opacity: 0.7; }
 
 /* ---------- Gravando áudio (melhorado) ---------- */
 .gravando-info {

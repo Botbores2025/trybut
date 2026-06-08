@@ -19,6 +19,30 @@ export default function ChatPage() {
   return <AppShell><Chat /></AppShell>;
 }
 
+function AudioMsg({ src, minha }) {
+  const audioRef = useRef(null);
+  const [tocando, setTocando] = useState(false);
+
+  function toggle() {
+    if (!src) { alert("áudio indisponível"); return; }
+    if (!audioRef.current) {
+      audioRef.current = new Audio(src);
+      audioRef.current.onended = () => setTocando(false);
+      audioRef.current.onerror = () => { setTocando(false); alert("não consegui tocar o áudio."); };
+    }
+    if (tocando) { audioRef.current.pause(); setTocando(false); }
+    else { audioRef.current.play().catch(() => setTocando(false)); setTocando(true); }
+  }
+
+  return (
+    <div className={"msg msg-audio-custom " + (minha ? "msg-minha" : "msg-dele")}>
+      <button className="audio-play-btn" onClick={toggle}>{tocando ? "⏸" : "▶"}</button>
+      <div className="audio-wave"><div className={"audio-wave-fill" + (tocando ? " tocando" : "")} /></div>
+      <span className="audio-label">áudio</span>
+    </div>
+  );
+}
+
 function Chat() {
   const { uid } = useParams();
   const { user } = useAuth();
@@ -155,7 +179,7 @@ function Chat() {
           return;
         }
 
-        const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         console.log("audio blob:", blob.size, "bytes, type:", blob.type);
 
         if (blob.size < 100) {
@@ -224,15 +248,7 @@ function Chat() {
                 <img src={m.fotoURL} alt="" className="msg-foto" onClick={() => setFotoAmpliada(m.fotoURL)} />
               </div>
             );
-            if (m.tipo === "audio") return (
-              <div key={m.id} className={"msg msg-audio-wrap " + (minha ? "msg-minha" : "msg-dele")}>
-                {m.audioURL ? (
-                  <audio src={m.audioURL} controls preload="metadata" className="msg-audio" />
-                ) : (
-                  <span className="msg-audio-erro">áudio indisponível</span>
-                )}
-              </div>
-            );
+            if (m.tipo === "audio") return <AudioMsg key={m.id} src={m.audioURL} minha={minha} />;
             if (m.texto) return <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>{m.texto}</div>;
             return null;
           })}
