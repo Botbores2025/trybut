@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
-  doc, getDoc, setDoc, addDoc, collection, query, orderBy, onSnapshot, serverTimestamp,
+  doc, getDoc, setDoc, addDoc, updateDoc, deleteField,
+  collection, query, orderBy, onSnapshot, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -28,8 +29,11 @@ function Chat() {
   const [pickerAberto, setPickerAberto] = useState(false);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
+  const [outroDigitando, setOutroDigitando] = useState(false);
   const fimRef = useRef(null);
   const fotoRef = useRef(null);
+  const digitandoTimeout = useRef(null);
+  const ultimoDigitando = useRef(0);
 
   const cid = user && uid ? idConversa(user.uid, uid) : null;
 
@@ -48,14 +52,60 @@ function Chat() {
     return () => unsub();
   }, [cid]);
 
+  // escutar indicador de digitação do outro
+  useEffect(() => {
+    if (!cid || !uid) return;
+    const unsub = onSnapshot(doc(db, "conversas", cid), (snap) => {
+      if (!snap.exists()) return;
+      const dig = snap.data().digitando || {};
+      const ts = dig[uid];
+      if (ts && ts.seconds) {
+        setOutroDigitando(Date.now() / 1000 - ts.seconds < 5);
+      } else {
+        setOutroDigitando(false);
+      }
+    });
+    return () => unsub();
+  }, [cid, uid]);
+
   useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs]);
+  }, [msgs, outroDigitando]);
+
+  // limpar meu "digitando" ao sair da página
+  useEffect(() => {
+    return () => {
+      if (cid && user) {
+        updateDoc(doc(db, "conversas", cid), {
+          [`digitando.${user.uid}`]: deleteField(),
+        }).catch(() => {});
+      }
+    };
+  }, [cid, user]);
+
+  function aoDigitar(e) {
+    setTexto(e.target.value);
+    if (!cid || !user) return;
+    const agora = Date.now();
+    if (agora - ultimoDigitando.current > 2000) {
+      ultimoDigitando.current = agora;
+      setDoc(doc(db, "conversas", cid), {
+        digitando: { [user.uid]: serverTimestamp() },
+      }, { merge: true }).catch(() => {});
+    }
+    clearTimeout(digitandoTimeout.current);
+    digitandoTimeout.current = setTimeout(() => {
+      updateDoc(doc(db, "conversas", cid), {
+        [`digitando.${user.uid}`]: deleteField(),
+      }).catch(() => {});
+    }, 3000);
+  }
 
   async function enviarMsg(t, tipo, fotoURL) {
     if (!cid || !user) return;
     setTexto("");
     setPickerAberto(false);
+    clearTimeout(digitandoTimeout.current);
     try {
       const previa = tipo === "figurinha" ? "enviou uma figurinha"
         : tipo === "foto" ? "enviou uma foto"
@@ -69,6 +119,7 @@ function Chat() {
         ultimaMensagem: previa,
         ultimoAutor: user.uid,
         timestamp: serverTimestamp(),
+        [`digitando.${user.uid}`]: deleteField(),
       }, { merge: true });
       const msgData = { texto: t || "", tipo: tipo || "texto", autorUid: user.uid, timestamp: serverTimestamp() };
       if (fotoURL) msgData.fotoURL = fotoURL;
@@ -84,29 +135,16 @@ function Chat() {
     }
   }
 
-  function enviar() {
-    const t = texto.trim();
-    if (t) enviarMsg(t, "texto");
-  }
-
-  function enviarFigurinha(emoji) {
-    enviarMsg(emoji, "figurinha");
-  }
+  function enviar() { const t = texto.trim(); if (t) enviarMsg(t, "texto"); }
+  function enviarFigurinha(emoji) { enviarMsg(emoji, "figurinha"); }
 
   async function enviarFoto(e) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
+    const file = e.target.files?.[0]; e.target.value = "";
     if (!file) return;
     setEnviandoFoto(true);
-    try {
-      const url = await uploadCloudinary(file);
-      await enviarMsg("", "foto", url);
-    } catch (err) {
-      console.error(err);
-      alert("não consegui enviar a foto.");
-    } finally {
-      setEnviandoFoto(false);
-    }
+    try { const url = await uploadCloudinary(file); await enviarMsg("", "foto", url); }
+    catch (err) { console.error(err); alert("não consegui enviar a foto."); }
+    finally { setEnviandoFoto(false); }
   }
 
   if (!alvo) return <p className="vazio">carregando...</p>;
@@ -147,6 +185,7 @@ function Chat() {
               <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>{m.texto}</div>
             );
           })}
+          {outroDigitando && <p className="digitando-indicator">digitando...</p>}
           <div ref={fimRef} />
         </div>
       </div>
@@ -154,21 +193,14 @@ function Chat() {
       {pickerAberto && <StickerPicker onSelect={enviarFigurinha} />}
 
       <div className="chat-input-bar">
-        <button className="chat-sticker-btn" onClick={() => setPickerAberto(!pickerAberto)} aria-label="figurinhas">
-          <Smile size={22} />
-        </button>
-        <button className="chat-sticker-btn" onClick={() => fotoRef.current?.click()}
-          disabled={enviandoFoto} aria-label="enviar foto">
-          <ImageIcon size={22} />
-        </button>
+        <button className="chat-sticker-btn" onClick={() => setPickerAberto(!pickerAberto)} aria-label="figurinhas"><Smile size={22} /></button>
+        <button className="chat-sticker-btn" onClick={() => fotoRef.current?.click()} disabled={enviandoFoto} aria-label="enviar foto"><ImageIcon size={22} /></button>
         <input ref={fotoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={enviarFoto} />
         <input className="chat-input" placeholder="mensagem..." value={texto}
-          onChange={(e) => setTexto(e.target.value)}
+          onChange={aoDigitar}
           onKeyDown={(e) => { if (e.key === "Enter") enviar(); }}
           onFocus={() => setPickerAberto(false)} />
-        <button className="chat-enviar" onClick={enviar} aria-label="enviar">
-          <Send size={20} />
-        </button>
+        <button className="chat-enviar" onClick={enviar} aria-label="enviar"><Send size={20} /></button>
       </div>
       {fotoAmpliada && (
         <div className="foto-overlay" onClick={() => setFotoAmpliada(null)}>
