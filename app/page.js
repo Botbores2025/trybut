@@ -18,6 +18,7 @@ import {
   increment,
   where,
   writeBatch,
+  deleteField,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -242,8 +243,31 @@ function Feed() {
   );
 }
 
+const REACOES = [
+  { tipo: "amei", emoji: "❤️" },
+  { tipo: "haha", emoji: "😂" },
+  { tipo: "uau", emoji: "😮" },
+  { tipo: "triste", emoji: "😢" },
+  { tipo: "grr", emoji: "😡" },
+];
+
 function Post({ post, user, meuPerfil }) {
-  const curtiu = (post.curtidasPor || []).includes(user.uid);
+  const reacoes = post.reacoes || {};
+  const minhaReacao = reacoes[user.uid] || null;
+  const legacyCurtidas = (post.curtidasPor || []).length;
+
+  // contar reações por tipo
+  const contagem = {};
+  Object.values(reacoes).forEach((tipo) => {
+    contagem[tipo] = (contagem[tipo] || 0) + 1;
+  });
+  // fallback: posts antigos sem reacoes mostram curtidas como amei
+  if (Object.keys(reacoes).length === 0 && legacyCurtidas > 0) {
+    contagem["amei"] = legacyCurtidas;
+  }
+  const totalReacoes = Object.values(contagem).reduce((a, b) => a + b, 0);
+
+  const [pickerAberto, setPickerAberto] = useState(false);
   const [aberto, setAberto] = useState(false);
   const [comentarios, setComentarios] = useState([]);
   const [novo, setNovo] = useState("");
@@ -261,10 +285,21 @@ function Post({ post, user, meuPerfil }) {
     return () => unsub();
   }, [aberto, post.id]);
 
-  async function curtir() {
-    await updateDoc(doc(db, "posts", post.id), {
-      curtidasPor: curtiu ? arrayRemove(user.uid) : arrayUnion(user.uid),
-    });
+  async function reagir(tipo) {
+    setPickerAberto(false);
+    try {
+      if (minhaReacao === tipo) {
+        await updateDoc(doc(db, "posts", post.id), {
+          [`reacoes.${user.uid}`]: deleteField(),
+        });
+      } else {
+        await updateDoc(doc(db, "posts", post.id), {
+          [`reacoes.${user.uid}`]: tipo,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function comentar() {
@@ -303,10 +338,41 @@ function Post({ post, user, meuPerfil }) {
       {post.texto && <p className="post-texto">{post.texto}</p>}
       {post.fotoURL && <img src={post.fotoURL} alt="" className="post-imagem" />}
 
+      {totalReacoes > 0 && (
+        <div className="reacoes-resumo">
+          {Object.entries(contagem).map(([tipo, count]) => {
+            const r = REACOES.find((x) => x.tipo === tipo);
+            return r ? (
+              <span key={tipo} className="reacao-count">{r.emoji} {count}</span>
+            ) : null;
+          })}
+        </div>
+      )}
+
+      {pickerAberto && (
+        <div className="reacoes-picker">
+          {REACOES.map((r) => (
+            <button
+              key={r.tipo}
+              className={"reacao-opcao" + (minhaReacao === r.tipo ? " ativo" : "")}
+              onClick={() => reagir(r.tipo)}
+              title={r.tipo}
+            >
+              {r.emoji}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="post-acoes">
-        <button className={"post-btn" + (curtiu ? " curtido" : "")} onClick={curtir}>
-          <Heart size={18} fill={curtiu ? "currentColor" : "none"} />{" "}
-          {(post.curtidasPor || []).length}
+        <button
+          className={"post-btn" + (minhaReacao ? " curtido" : "")}
+          onClick={() => setPickerAberto((p) => !p)}
+        >
+          {minhaReacao
+            ? REACOES.find((r) => r.tipo === minhaReacao)?.emoji
+            : <Heart size={18} />}{" "}
+          reagir
         </button>
         <button className="post-btn" onClick={() => setAberto((a) => !a)}>
           <MessageCircle size={18} /> {post.comentariosCount || 0}
