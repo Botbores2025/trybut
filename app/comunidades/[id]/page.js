@@ -11,7 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { uploadCloudinary } from "@/lib/cloudinary";
 import AppShell from "@/components/AppShell";
 import StickerPicker from "@/components/StickerPicker";
-import { ArrowLeft, Send, Smile, Image as ImageIcon, X } from "lucide-react";
+import { ArrowLeft, Send, Smile, Image as ImageIcon, X, Mic, Square } from "lucide-react";
 
 export default function GrupoChatPage() {
   return <AppShell><GrupoChat /></AppShell>;
@@ -26,9 +26,13 @@ function GrupoChat() {
   const [texto, setTexto] = useState("");
   const [pickerAberto, setPickerAberto] = useState(false);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [enviandoAudio, setEnviandoAudio] = useState(false);
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
+  const [gravando, setGravando] = useState(false);
   const fimRef = useRef(null);
   const fotoRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
 
   useEffect(() => {
     if (!id || !user) return;
@@ -45,15 +49,15 @@ function GrupoChat() {
 
   useEffect(() => { fimRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
 
-  async function enviarMsg(t, tipo, fotoURL) {
+  async function enviarMsg(t, tipo, fotoURL, audioURL) {
     if (!id || !user) return;
-    setTexto("");
-    setPickerAberto(false);
+    setTexto(""); setPickerAberto(false);
     try {
       const msgData = { texto: t || "", tipo: tipo || "texto", autorUid: user.uid, autorNome: eu?.nome || "eu", timestamp: serverTimestamp() };
       if (fotoURL) msgData.fotoURL = fotoURL;
+      if (audioURL) msgData.audioURL = audioURL;
       await addDoc(collection(db, "grupos", id, "mensagens"), msgData);
-      const previa = tipo === "figurinha" ? "enviou uma figurinha" : tipo === "foto" ? "enviou uma foto" : t;
+      const previa = tipo === "figurinha" ? "enviou uma figurinha" : tipo === "foto" ? "enviou uma foto" : tipo === "audio" ? "enviou um áudio" : t;
       await updateDoc(doc(db, "grupos", id), { ultimaMensagem: previa, ultimoAutor: user.uid, timestamp: serverTimestamp() });
     } catch (e) { console.error(e); alert("não consegui enviar. tenta de novo."); }
   }
@@ -68,6 +72,28 @@ function GrupoChat() {
     try { const url = await uploadCloudinary(file); await enviarMsg("", "foto", url); }
     catch (err) { console.error(err); alert("não consegui enviar a foto."); }
     finally { setEnviandoFoto(false); }
+  }
+
+  async function toggleGravar() {
+    if (gravando) { mediaRecorderRef.current?.stop(); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const options = MediaRecorder.isTypeSupported("audio/webm") ? { mimeType: "audio/webm" } : {};
+      const mr = new MediaRecorder(stream, options);
+      mediaRecorderRef.current = mr;
+      chunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
+        const file = new File([blob], "audio.webm", { type: blob.type });
+        setGravando(false); setEnviandoAudio(true);
+        try { const url = await uploadCloudinary(file, "video"); await enviarMsg("", "audio", null, url); }
+        catch (e) { console.error(e); alert("não consegui enviar o áudio."); }
+        finally { setEnviandoAudio(false); }
+      };
+      mr.start(); setGravando(true);
+    } catch (e) { console.error(e); alert("não consegui acessar o microfone."); }
   }
 
   if (!grupo) return <p className="vazio">carregando...</p>;
@@ -86,32 +112,29 @@ function GrupoChat() {
       <div className="chat-msgs">
         <div className="chat-msgs-inner">
           {msgs.length === 0 && <p className="vazio">grupo criado! manda a primeira mensagem.</p>}
-          {enviandoFoto && <p className="vazio">enviando foto...</p>}
+          {(enviandoFoto || enviandoAudio) && <p className="vazio">{enviandoAudio ? "enviando áudio..." : "enviando foto..."}</p>}
           {msgs.map((m) => {
             const minha = m.autorUid === user.uid;
             if (m.tipo === "figurinha") {
-              return (
-                <div key={m.id} className={"msg-figurinha " + (minha ? "msg-minha" : "msg-dele")}>
-                  {!minha && <p className="msg-autor">{m.autorNome || "alguém"}</p>}
-                  <span className="figurinha">{m.texto}</span>
-                </div>
-              );
+              return <div key={m.id} className={"msg-figurinha " + (minha ? "msg-minha" : "msg-dele")}>{!minha && <p className="msg-autor">{m.autorNome}</p>}<span className="figurinha">{m.texto}</span></div>;
             }
             if (m.tipo === "foto") {
               return (
                 <div key={m.id} className={"msg msg-foto-wrap " + (minha ? "msg-minha" : "msg-dele")}>
-                  {!minha && <p className="msg-autor">{m.autorNome || "alguém"}</p>}
+                  {!minha && <p className="msg-autor">{m.autorNome}</p>}
                   <img src={m.fotoURL} alt="" className="msg-foto" onClick={() => setFotoAmpliada(m.fotoURL)} />
-                  {m.texto && <p className="msg-foto-legenda">{m.texto}</p>}
                 </div>
               );
             }
-            return (
-              <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>
-                {!minha && <p className="msg-autor">{m.autorNome || "alguém"}</p>}
-                {m.texto}
-              </div>
-            );
+            if (m.tipo === "audio") {
+              return (
+                <div key={m.id} className={"msg msg-audio-wrap " + (minha ? "msg-minha" : "msg-dele")}>
+                  {!minha && <p className="msg-autor">{m.autorNome}</p>}
+                  <audio src={m.audioURL} controls className="msg-audio" />
+                </div>
+              );
+            }
+            return <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>{!minha && <p className="msg-autor">{m.autorNome}</p>}{m.texto}</div>;
           })}
           <div ref={fimRef} />
         </div>
@@ -121,14 +144,16 @@ function GrupoChat() {
 
       <div className="chat-input-bar">
         <button className="chat-sticker-btn" onClick={() => setPickerAberto(!pickerAberto)} aria-label="figurinhas"><Smile size={22} /></button>
-        <button className="chat-sticker-btn" onClick={() => fotoRef.current?.click()} disabled={enviandoFoto} aria-label="enviar foto"><ImageIcon size={22} /></button>
+        <button className="chat-sticker-btn" onClick={() => fotoRef.current?.click()} disabled={enviandoFoto} aria-label="foto"><ImageIcon size={22} /></button>
         <input ref={fotoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={enviarFoto} />
         <input className="chat-input" placeholder="mensagem..." value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") enviar(); }}
+          onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") enviar(); }}
           onFocus={() => setPickerAberto(false)} />
+        <button className={"chat-mic-btn" + (gravando ? " gravando" : "")} onClick={toggleGravar}
+          disabled={enviandoAudio} aria-label={gravando ? "parar" : "gravar"}>{gravando ? <Square size={18} /> : <Mic size={20} />}</button>
         <button className="chat-enviar" onClick={enviar} aria-label="enviar"><Send size={20} /></button>
       </div>
+
       {fotoAmpliada && (
         <div className="foto-overlay" onClick={() => setFotoAmpliada(null)}>
           <button className="foto-fechar" onClick={() => setFotoAmpliada(null)}><X size={24} /></button>
