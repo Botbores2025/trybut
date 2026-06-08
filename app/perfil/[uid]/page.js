@@ -40,6 +40,7 @@ function Perfil() {
   const [salvo, setSalvo] = useState(false);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
   const fileRef = useRef(null);
+  const capaRef = useRef(null);
 
   useEffect(() => {
     if (!uid) return;
@@ -87,6 +88,19 @@ function Perfil() {
       await updateDoc(doc(db, "usuarios", uid), { fotoURL: url });
       setPerfil((p) => ({ ...p, fotoURL: url }));
     } catch (err) { console.error(err); alert("não consegui enviar a foto."); }
+    finally { setEnviandoFoto(false); }
+  }
+
+  async function onSelecionarCapa(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setEnviandoFoto(true);
+    try {
+      const url = await uploadCloudinary(file);
+      await updateDoc(doc(db, "usuarios", uid), { capaURL: url });
+      setPerfil((p) => ({ ...p, capaURL: url }));
+    } catch (err) { console.error(err); alert("não consegui enviar a capa."); }
     finally { setEnviandoFoto(false); }
   }
 
@@ -148,8 +162,18 @@ function Perfil() {
 
   return (
     <>
-      <section className="card">
-        <div className="perfil-cabecalho">
+      <section className="card perfil-card">
+        {/* foto de capa */}
+        <div
+          className="perfil-capa"
+          onClick={ehMeu ? () => capaRef.current?.click() : undefined}
+          style={perfil.capaURL ? { backgroundImage: `url(${perfil.capaURL})` } : undefined}
+        >
+          {ehMeu && <span className="capa-editar">{perfil.capaURL ? "trocar capa" : "adicionar capa"}</span>}
+        </div>
+        <input ref={capaRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onSelecionarCapa} />
+
+        <div className="perfil-cabecalho perfil-cabecalho-v2">
           <div className="avatar" onClick={ehMeu ? abrirSeletor : undefined}
             title={ehMeu ? "trocar foto" : ""} style={{ cursor: ehMeu ? "pointer" : "default", position: "relative" }}>
             {perfil.fotoURL
