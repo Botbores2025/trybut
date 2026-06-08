@@ -91,8 +91,7 @@ function Chat() {
 
   async function enviarMsg(t, tipo, fotoURL, audioURL) {
     if (!cid || !user) return;
-    setTexto("");
-    setPickerAberto(false);
+    setTexto(""); setPickerAberto(false);
     clearTimeout(digitandoTimeout.current);
     try {
       const previa = tipo === "figurinha" ? "enviou uma figurinha"
@@ -133,10 +132,7 @@ function Chat() {
   }
 
   async function toggleGravar() {
-    if (gravando) {
-      mediaRecorderRef.current?.stop();
-      return;
-    }
+    if (gravando) { mediaRecorderRef.current?.stop(); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const options = MediaRecorder.isTypeSupported("audio/webm") ? { mimeType: "audio/webm" } : {};
@@ -147,21 +143,24 @@ function Chat() {
       mr.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
         const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
-        const file = new File([blob], "audio.webm", { type: blob.type });
         setGravando(false);
         setEnviandoAudio(true);
         try {
-          const url = await uploadCloudinary(file, "video");
-          await enviarMsg("", "audio", null, url);
+          const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          await enviarMsg("", "audio", null, dataUrl);
         } catch (e) { console.error(e); alert("não consegui enviar o áudio."); }
         finally { setEnviandoAudio(false); }
       };
       mr.start();
       setGravando(true);
-    } catch (e) {
-      console.error(e);
-      alert("não consegui acessar o microfone. permita o acesso.");
-    }
+      // limite de 60 segundos
+      setTimeout(() => { if (mr.state === "recording") mr.stop(); }, 60000);
+    } catch (e) { console.error(e); alert("não consegui acessar o microfone. permita o acesso."); }
   }
 
   if (!alvo) return <p className="vazio">carregando...</p>;
@@ -171,8 +170,7 @@ function Chat() {
       <Link href={`/perfil/${uid}`} className="chat-topo">
         <ArrowLeft size={20} />
         <div className="avatar-mini">
-          {alvo.fotoURL ? <img src={alvo.fotoURL} className="avatar-img" alt="" />
-            : (alvo.nome || "?").charAt(0).toUpperCase()}
+          {alvo.fotoURL ? <img src={alvo.fotoURL} className="avatar-img" alt="" /> : (alvo.nome || "?").charAt(0).toUpperCase()}
         </div>
         <span className="chat-nome">{alvo.nome || "usuário"}</span>
       </Link>
@@ -180,29 +178,21 @@ function Chat() {
       <div className="chat-msgs">
         <div className="chat-msgs-inner">
           {msgs.length === 0 && <p className="vazio">nenhuma mensagem ainda. manda a primeira!</p>}
-          {(enviandoFoto || enviandoAudio) && (
-            <p className="vazio">{enviandoAudio ? "enviando áudio..." : "enviando foto..."}</p>
-          )}
+          {(enviandoFoto || enviandoAudio) && <p className="vazio">{enviandoAudio ? "enviando áudio..." : "enviando foto..."}</p>}
           {msgs.map((m) => {
             const minha = m.autorUid === user.uid;
-            if (m.tipo === "figurinha") {
-              return <div key={m.id} className={"msg-figurinha " + (minha ? "msg-minha" : "msg-dele")}><span className="figurinha">{m.texto}</span></div>;
-            }
-            if (m.tipo === "foto") {
-              return (
-                <div key={m.id} className={"msg msg-foto-wrap " + (minha ? "msg-minha" : "msg-dele")}>
-                  <img src={m.fotoURL} alt="" className="msg-foto" onClick={() => setFotoAmpliada(m.fotoURL)} />
-                  {m.texto && <p className="msg-foto-legenda">{m.texto}</p>}
-                </div>
-              );
-            }
-            if (m.tipo === "audio") {
-              return (
-                <div key={m.id} className={"msg msg-audio-wrap " + (minha ? "msg-minha" : "msg-dele")}>
-                  <audio src={m.audioURL} controls className="msg-audio" />
-                </div>
-              );
-            }
+            if (m.tipo === "figurinha") return <div key={m.id} className={"msg-figurinha " + (minha ? "msg-minha" : "msg-dele")}><span className="figurinha">{m.texto}</span></div>;
+            if (m.tipo === "foto") return (
+              <div key={m.id} className={"msg msg-foto-wrap " + (minha ? "msg-minha" : "msg-dele")}>
+                <img src={m.fotoURL} alt="" className="msg-foto" onClick={() => setFotoAmpliada(m.fotoURL)} />
+                {m.texto && <p className="msg-foto-legenda">{m.texto}</p>}
+              </div>
+            );
+            if (m.tipo === "audio" && m.audioURL) return (
+              <div key={m.id} className={"msg msg-audio-wrap " + (minha ? "msg-minha" : "msg-dele")}>
+                <audio src={m.audioURL} controls preload="metadata" className="msg-audio" />
+              </div>
+            );
             return <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>{m.texto}</div>;
           })}
           {outroDigitando && <p className="digitando-indicator">digitando...</p>}
@@ -211,21 +201,16 @@ function Chat() {
       </div>
 
       {pickerAberto && <StickerPicker onSelect={enviarFigurinha} />}
-
       <div className="chat-input-bar">
         <button className="chat-sticker-btn" onClick={() => setPickerAberto(!pickerAberto)} aria-label="figurinhas"><Smile size={22} /></button>
-        <button className="chat-sticker-btn" onClick={() => fotoRef.current?.click()} disabled={enviandoFoto} aria-label="enviar foto"><ImageIcon size={22} /></button>
+        <button className="chat-sticker-btn" onClick={() => fotoRef.current?.click()} disabled={enviandoFoto} aria-label="foto"><ImageIcon size={22} /></button>
         <input ref={fotoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={enviarFoto} />
-        <input className="chat-input" placeholder="mensagem..." value={texto}
-          onChange={aoDigitar} onKeyDown={(e) => { if (e.key === "Enter") enviar(); }}
-          onFocus={() => setPickerAberto(false)} />
+        <input className="chat-input" placeholder="mensagem..." value={texto} onChange={aoDigitar}
+          onKeyDown={(e) => { if (e.key === "Enter") enviar(); }} onFocus={() => setPickerAberto(false)} />
         <button className={"chat-mic-btn" + (gravando ? " gravando" : "")} onClick={toggleGravar}
-          disabled={enviandoAudio} aria-label={gravando ? "parar" : "gravar áudio"}>
-          {gravando ? <Square size={18} /> : <Mic size={20} />}
-        </button>
+          disabled={enviandoAudio} aria-label={gravando ? "parar" : "gravar"}>{gravando ? <Square size={18} /> : <Mic size={20} />}</button>
         <button className="chat-enviar" onClick={enviar} aria-label="enviar"><Send size={20} /></button>
       </div>
-
       {fotoAmpliada && (
         <div className="foto-overlay" onClick={() => setFotoAmpliada(null)}>
           <button className="foto-fechar" onClick={() => setFotoAmpliada(null)}><X size={24} /></button>
