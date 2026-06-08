@@ -1449,3 +1449,24 @@ textarea { resize: vertical; }
 .resposta-preview-x:hover { color: var(--texto); }
 .msg, .msg-figurinha { cursor: pointer; }
 .msg:active, .msg-figurinha:active { opacity: 0.8; }
+
+/* ---------- Lista de amigos no perfil ---------- */
+.stat-clicavel {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.stat-clicavel:hover { background: var(--laranja-claro); }
+.amigos-lista {
+  padding: 12px 20px 4px;
+  border-top: 1px solid var(--borda);
+}
+.amigo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  text-decoration: none;
+  color: inherit;
+}
+.amigo-item:hover .amigo-nome { color: var(--laranja); }
+.amigo-nome { font-size: 14px; font-weight: 600; }

@@ -33,6 +33,8 @@ function Perfil() {
   const [relacao, setRelacao] = useState(null);
   const [carregandoAcao, setCarregandoAcao] = useState(false);
   const [confirmacao, setConfirmacao] = useState(null);
+  const [mostraAmigos, setMostraAmigos] = useState(false);
+  const [listaAmigos, setListaAmigos] = useState([]);
 
   const [nome, setNome] = useState("");
   const [cidade, setCidade] = useState("");
@@ -239,8 +241,30 @@ function Perfil() {
 
         <div className="stats">
           <div className="stat"><strong>{posts.length}</strong><span>posts</span></div>
-          <div className="stat"><strong>{perfil.amigosCount || 0}</strong><span>amigos</span></div>
+          <div className="stat stat-clicavel" onClick={async () => {
+            if (mostraAmigos) { setMostraAmigos(false); return; }
+            const snap = await getDocs(collection(db, "usuarios", uid, "amigos"));
+            setListaAmigos(snap.docs.map(d => ({ uid: d.id, ...d.data() })));
+            setMostraAmigos(true);
+          }}>
+            <strong>{perfil.amigosCount || 0}</strong><span>amigos</span>
+          </div>
         </div>
+
+        {mostraAmigos && (
+          <div className="amigos-lista">
+            <p className="card-titulo">amigos</p>
+            {listaAmigos.length === 0 && <p className="vazio">nenhum amigo ainda.</p>}
+            {listaAmigos.map(a => (
+              <Link key={a.uid} href={`/perfil/${a.uid}`} className="amigo-item">
+                <div className="avatar-mini">
+                  {a.foto ? <img src={a.foto} className="avatar-img" alt="" /> : (a.nome || "?").charAt(0).toUpperCase()}
+                </div>
+                <span className="amigo-nome">{a.nome || "amigo"}</span>
+              </Link>
+            ))}
+          </div>
+        )}
         {ehMeu && (
           <button className="btn-convite" onClick={async () => {
             const dados = { title: "trybut", text: "Entra no trybut comigo! sua tribo, do seu jeito", url: "https://trybut.vercel.app" };
