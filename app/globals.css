@@ -1384,3 +1384,68 @@ textarea { resize: vertical; }
 .perfil-card .stats { padding: 0 20px 4px; }
 .perfil-card .btn-convite { margin: 8px 20px 18px; width: calc(100% - 40px); }
 .perfil-card .perfil-acoes-extra { padding-left: 20px; }
+
+/* ---------- Responder mensagem (quote/reply) ---------- */
+.msg-quote {
+  font-size: 12px;
+  padding: 5px 8px;
+  margin-bottom: 4px;
+  border-left: 3px solid rgba(255,255,255,0.5);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.1);
+  cursor: default;
+}
+.msg-dele .msg-quote {
+  border-left-color: var(--laranja);
+  background: rgba(0,0,0,0.05);
+}
+.msg-quote-nome {
+  display: block;
+  font-weight: 700;
+  font-size: 11px;
+  margin-bottom: 1px;
+}
+.msg-quote-texto {
+  display: block;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+.resposta-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+.resposta-preview-info { flex: 1; min-width: 0; }
+.resposta-preview-nome {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--laranja);
+}
+.resposta-preview-texto {
+  display: block;
+  font-size: 12px;
+  color: var(--texto-fraco);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.resposta-preview-x {
+  background: none;
+  border: none;
+  color: var(--texto-fraco);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+}
+.resposta-preview-x:hover { color: var(--texto); }
+.msg, .msg-figurinha { cursor: pointer; }
+.msg:active, .msg-figurinha:active { opacity: 0.8; }

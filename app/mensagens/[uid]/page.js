@@ -110,6 +110,7 @@ function Chat() {
   const [gravando, setGravando] = useState(false);
   const [tempoGravando, setTempoGravando] = useState(0);
   const [enviandoAudio, setEnviandoAudio] = useState(false);
+  const [respondendoA, setRespondendoA] = useState(null);
   const fimRef = useRef(null);
   const fotoRef = useRef(null);
   const digitandoTimeout = useRef(null);
@@ -171,6 +172,8 @@ function Chat() {
     if (!cid || !user) return;
     setTexto(""); setPickerAberto(false);
     clearTimeout(digitandoTimeout.current);
+    const resposta = respondendoA;
+    setRespondendoA(null);
     try {
       const previa = tipo === "figurinha" ? "enviou uma figurinha"
         : tipo === "foto" ? "enviou uma foto"
@@ -187,6 +190,13 @@ function Chat() {
       const msgData = { texto: t || "", tipo: tipo || "texto", autorUid: user.uid, timestamp: serverTimestamp() };
       if (fotoURL) msgData.fotoURL = fotoURL;
       if (audioURL) msgData.audioURL = audioURL;
+      if (resposta) {
+        msgData.respostaA = {
+          autorNome: resposta.autorUid === user.uid ? (eu?.nome || "você") : (alvo?.nome || "alguém"),
+          texto: resposta.texto || "",
+          tipo: resposta.tipo || "texto",
+        };
+      }
       await addDoc(collection(db, "conversas", cid, "mensagens"), msgData);
       await setDoc(doc(db, "notificacoes", `msg_${user.uid}_${uid}`), {
         tipo: "mensagem", deUid: user.uid, deNome: eu?.nome || "alguém",
@@ -314,14 +324,38 @@ function Chat() {
           {(enviandoFoto || enviandoAudio) && <p className="vazio">{enviandoAudio ? "enviando áudio..." : "enviando foto..."}</p>}
           {msgs.map((m) => {
             const minha = m.autorUid === user.uid;
-            if (m.tipo === "figurinha") return <div key={m.id} className={"msg-figurinha " + (minha ? "msg-minha" : "msg-dele")}><span className="figurinha">{m.texto}</span></div>;
-            if (m.tipo === "foto" && m.fotoURL) return (
-              <div key={m.id} className={"msg msg-foto-wrap " + (minha ? "msg-minha" : "msg-dele")}>
-                <img src={m.fotoURL} alt="" className="msg-foto" onClick={() => setFotoAmpliada(m.fotoURL)} />
+            const quote = m.respostaA ? (
+              <div className="msg-quote" onClick={(e) => e.stopPropagation()}>
+                <span className="msg-quote-nome">{m.respostaA.autorNome}</span>
+                <span className="msg-quote-texto">
+                  {m.respostaA.tipo === "foto" ? "foto" : m.respostaA.tipo === "audio" ? "áudio" : m.respostaA.tipo === "figurinha" ? m.respostaA.texto : (m.respostaA.texto || "").slice(0, 50)}
+                </span>
+              </div>
+            ) : null;
+            if (m.tipo === "figurinha") return (
+              <div key={m.id} className={"msg-figurinha " + (minha ? "msg-minha" : "msg-dele")} onClick={() => setRespondendoA(m)}>
+                {quote}
+                <span className="figurinha">{m.texto}</span>
               </div>
             );
-            if (m.tipo === "audio") return <AudioMsg key={m.id} src={m.audioURL} minha={minha} timestamp={m.timestamp} />;
-            if (m.texto) return <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>{m.texto}</div>;
+            if (m.tipo === "foto" && m.fotoURL) return (
+              <div key={m.id} className={"msg msg-foto-wrap " + (minha ? "msg-minha" : "msg-dele")} onClick={() => setRespondendoA(m)}>
+                {quote}
+                <img src={m.fotoURL} alt="" className="msg-foto" onClick={(e) => { e.stopPropagation(); setFotoAmpliada(m.fotoURL); }} />
+              </div>
+            );
+            if (m.tipo === "audio") return (
+              <div key={m.id} onClick={() => setRespondendoA(m)} style={{alignSelf: minha ? "flex-end" : "flex-start"}}>
+                {quote && <div className={"msg " + (minha ? "msg-minha" : "msg-dele")} style={{marginBottom:2, padding:"6px 10px"}}>{quote}</div>}
+                <AudioMsg src={m.audioURL} minha={minha} timestamp={m.timestamp} />
+              </div>
+            );
+            if (m.texto) return (
+              <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")} onClick={() => setRespondendoA(m)}>
+                {quote}
+                {m.texto}
+              </div>
+            );
             return null;
           })}
           {outroDigitando && <p className="digitando-indicator">digitando...</p>}
@@ -330,6 +364,20 @@ function Chat() {
       </div>
 
       {pickerAberto && <StickerPicker onSelect={enviarFigurinha} />}
+
+      {respondendoA && (
+        <div className="resposta-preview">
+          <div className="resposta-preview-info">
+            <span className="resposta-preview-nome">
+              {respondendoA.autorUid === user.uid ? "você" : (alvo?.nome || "alguém")}
+            </span>
+            <span className="resposta-preview-texto">
+              {respondendoA.tipo === "foto" ? "foto" : respondendoA.tipo === "audio" ? "áudio" : respondendoA.tipo === "figurinha" ? respondendoA.texto : (respondendoA.texto || "").slice(0, 60)}
+            </span>
+          </div>
+          <button className="resposta-preview-x" onClick={() => setRespondendoA(null)}>✕</button>
+        </div>
+      )}
 
       <div className="chat-input-bar">
         <button className="chat-sticker-btn" onClick={() => setPickerAberto(!pickerAberto)} aria-label="figurinhas"><Smile size={22} /></button>
