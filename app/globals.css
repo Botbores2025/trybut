@@ -1243,28 +1243,53 @@ textarea { resize: vertical; }
   padding: 0;
   line-height: 1;
 }
-.audio-wave {
-  flex: 1;
-  height: 4px;
-  background: rgba(255,255,255,0.3);
-  border-radius: 2px;
-  min-width: 60px;
-  overflow: hidden;
+/* ---------- Player de áudio v2 (polido) ---------- */
+.msg-audio-v2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px !important;
+  min-width: 220px;
+  max-width: 300px;
 }
-.msg-dele .audio-wave { background: rgba(0,0,0,0.12); }
-.audio-wave-fill {
-  width: 0%;
-  height: 100%;
-  background: rgba(255,255,255,0.7);
-  border-radius: 2px;
-  transition: width 0.3s;
+.audio-play-v2 {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.25);
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
 }
-.msg-dele .audio-wave-fill { background: rgba(0,0,0,0.3); }
-.audio-wave-fill.tocando {
-  width: 100%;
-  transition: width 3s linear;
+.audio-play-v2:hover { background: rgba(255,255,255,0.4); }
+.msg-dele .audio-play-v2 { background: rgba(0,0,0,0.08); }
+.msg-dele .audio-play-v2:hover { background: rgba(0,0,0,0.14); }
+.audio-meio { flex: 1; min-width: 0; }
+.audio-barras {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 24px;
 }
-.audio-label { font-size: 11px; opacity: 0.7; }
+.audio-barra {
+  width: 3px;
+  background: currentColor;
+  border-radius: 1.5px;
+  transition: opacity 0.15s;
+}
+.audio-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+.audio-duracao { font-size: 11px; font-weight: 700; opacity: 0.85; }
+.audio-hora { font-size: 10px; opacity: 0.5; }
 
 /* ---------- Gravando áudio (melhorado) ---------- */
 .gravando-info {
