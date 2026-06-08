@@ -1151,3 +1151,39 @@ textarea { resize: vertical; }
 [data-theme="dark"] .foto-overlay { background: rgba(0, 0, 0, 0.95); }
 [data-theme="dark"] .busca-input { color: #ece4dc; }
 [data-theme="dark"] .composer-input { color: #ece4dc; }
+
+/* ---------- Convide amigos ---------- */
+.side-divisor {
+  height: 1px;
+  background: var(--borda);
+  margin: 8px 12px;
+}
+.side-convite {
+  color: var(--laranja) !important;
+  font-weight: 700 !important;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+.side-convite:hover { background: var(--laranja-claro) !important; }
+.btn-convite {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--laranja);
+  background: var(--laranja-claro);
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.btn-convite:hover { background: #ffe0cc; }
+[data-theme="dark"] .btn-convite:hover { background: #4a2a15; }

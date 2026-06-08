@@ -16,6 +16,7 @@ import {
 } from "@/lib/social";
 import AppShell from "@/components/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
+import { Share2 } from "lucide-react";
 
 export default function PerfilPage() {
   return <AppShell><Perfil /></AppShell>;
@@ -204,6 +205,15 @@ function Perfil() {
           <div className="stat"><strong>{posts.length}</strong><span>posts</span></div>
           <div className="stat"><strong>{perfil.amigosCount || 0}</strong><span>amigos</span></div>
         </div>
+        {ehMeu && (
+          <button className="btn-convite" onClick={async () => {
+            const dados = { title: "trybut", text: "Entra no trybut comigo! sua tribo, do seu jeito", url: "https://trybut.vercel.app" };
+            if (navigator.share) { try { await navigator.share(dados); } catch(e){} }
+            else { try { await navigator.clipboard.writeText(`${dados.text} ${dados.url}`); alert("link copiado!"); } catch(e){ alert("trybut.vercel.app"); } }
+          }}>
+            <Share2 size={16} /> convide amigos pro trybut
+          </button>
+        )}
       </section>
 
       {ehMeu && (
