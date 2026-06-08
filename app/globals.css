@@ -959,3 +959,27 @@ textarea { resize: vertical; }
   background: var(--laranja-claro);
   transform: scale(1.2);
 }
+
+/* ---------- Apagar posts ---------- */
+.post-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.post-topo .post-cabecalho-link { margin-bottom: 0; }
+.post-apagar {
+  background: none;
+  border: none;
+  color: var(--texto-fraco);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  opacity: 0.4;
+  transition: opacity 0.15s, color 0.15s;
+}
+.post-apagar:hover {
+  opacity: 1;
+  color: #ef4444;
+  background: #fee2e2;
+}

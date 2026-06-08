@@ -19,6 +19,7 @@ import {
   where,
   writeBatch,
   deleteField,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -26,7 +27,7 @@ import { uploadCloudinary } from "@/lib/cloudinary";
 import { buscarAmigosUids } from "@/lib/social";
 import AppShell from "@/components/AppShell";
 import Link from "next/link";
-import { Heart, MessageCircle, Image as ImageIcon } from "lucide-react";
+import { Heart, MessageCircle, Image as ImageIcon, Trash2 } from "lucide-react";
 
 export default function FeedPage() {
   return (
@@ -326,15 +327,32 @@ function Post({ post, user, meuPerfil }) {
     }
   }
 
+  async function apagar() {
+    if (!confirm("tem certeza que quer apagar esse post?")) return;
+    try {
+      await deleteDoc(doc(db, "posts", post.id));
+    } catch (e) {
+      console.error(e);
+      alert("não consegui apagar. tenta de novo.");
+    }
+  }
+
   return (
     <article className="card post">
-      <Link href={`/perfil/${post.autorUid}`} className="post-cabecalho post-cabecalho-link">
-        <Inicial nome={post.autorNome} foto={post.autorFoto} />
-        <div>
-          <p className="post-autor">{post.autorNome}</p>
-          <p className="post-tempo">{tempoRelativo(post.criadoEm)}</p>
-        </div>
-      </Link>
+      <div className="post-topo">
+        <Link href={`/perfil/${post.autorUid}`} className="post-cabecalho post-cabecalho-link">
+          <Inicial nome={post.autorNome} foto={post.autorFoto} />
+          <div>
+            <p className="post-autor">{post.autorNome}</p>
+            <p className="post-tempo">{tempoRelativo(post.criadoEm)}</p>
+          </div>
+        </Link>
+        {post.autorUid === user.uid && (
+          <button className="post-apagar" onClick={apagar} title="apagar post">
+            <Trash2 size={16} />
+          </button>
+        )}
+      </div>
       {post.texto && <p className="post-texto">{post.texto}</p>}
       {post.fotoURL && <img src={post.fotoURL} alt="" className="post-imagem" />}
 
