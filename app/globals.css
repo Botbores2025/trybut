@@ -983,3 +983,54 @@ textarea { resize: vertical; }
   color: #ef4444;
   background: #fee2e2;
 }
+
+/* ---------- Fotos no chat ---------- */
+.msg-foto-wrap {
+  padding: 4px !important;
+  overflow: hidden;
+}
+.msg-foto {
+  max-width: 220px;
+  width: 100%;
+  border-radius: 10px;
+  display: block;
+}
+.msg-foto-legenda {
+  margin: 4px 8px 2px;
+  font-size: 13px;
+}
+
+/* ---------- Foto ampliada (lightbox) ---------- */
+.msg-foto { cursor: pointer; }
+.foto-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  cursor: pointer;
+}
+.foto-ampliada {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.foto-fechar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.foto-fechar:hover { background: rgba(255, 255, 255, 0.3); }

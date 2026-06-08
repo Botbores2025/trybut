@@ -9,9 +9,10 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { idConversa } from "@/lib/chat";
+import { uploadCloudinary } from "@/lib/cloudinary";
 import AppShell from "@/components/AppShell";
 import StickerPicker from "@/components/StickerPicker";
-import { ArrowLeft, Send, Smile } from "lucide-react";
+import { ArrowLeft, Send, Smile, Image as ImageIcon, X } from "lucide-react";
 
 export default function ChatPage() {
   return <AppShell><Chat /></AppShell>;
@@ -25,7 +26,10 @@ function Chat() {
   const [msgs, setMsgs] = useState([]);
   const [texto, setTexto] = useState("");
   const [pickerAberto, setPickerAberto] = useState(false);
+  const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const fimRef = useRef(null);
+  const fotoRef = useRef(null);
 
   const cid = user && uid ? idConversa(user.uid, uid) : null;
 
@@ -48,34 +52,31 @@ function Chat() {
     fimRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs]);
 
-  async function enviarMsg(t, tipo) {
-    if (!t || !cid || !user) return;
+  async function enviarMsg(t, tipo, fotoURL) {
+    if (!cid || !user) return;
     setTexto("");
     setPickerAberto(false);
     try {
+      const previa = tipo === "figurinha" ? "enviou uma figurinha"
+        : tipo === "foto" ? "enviou uma foto"
+        : (t.length > 50 ? t.slice(0, 50) + "..." : t);
       await setDoc(doc(db, "conversas", cid), {
         participantes: [user.uid, uid],
         participantesInfo: {
           [user.uid]: { nome: eu?.nome || "eu", foto: eu?.fotoURL || "" },
           [uid]: { nome: alvo?.nome || "", foto: alvo?.fotoURL || "" },
         },
-        ultimaMensagem: tipo === "figurinha" ? "enviou uma figurinha" : t,
+        ultimaMensagem: previa,
         ultimoAutor: user.uid,
         timestamp: serverTimestamp(),
       }, { merge: true });
-      await addDoc(collection(db, "conversas", cid, "mensagens"), {
-        texto: t, tipo: tipo || "texto", autorUid: user.uid, timestamp: serverTimestamp(),
-      });
-      // notificar
+      const msgData = { texto: t || "", tipo: tipo || "texto", autorUid: user.uid, timestamp: serverTimestamp() };
+      if (fotoURL) msgData.fotoURL = fotoURL;
+      await addDoc(collection(db, "conversas", cid, "mensagens"), msgData);
       await setDoc(doc(db, "notificacoes", `msg_${user.uid}_${uid}`), {
-        tipo: "mensagem",
-        deUid: user.uid,
-        deNome: eu?.nome || "alguém",
-        deFoto: eu?.fotoURL || "",
-        paraUid: uid,
-        previa: tipo === "figurinha" ? "enviou uma figurinha" : (t.length > 50 ? t.slice(0, 50) + "..." : t),
-        timestamp: serverTimestamp(),
-        lida: false,
+        tipo: "mensagem", deUid: user.uid, deNome: eu?.nome || "alguém",
+        deFoto: eu?.fotoURL || "", paraUid: uid, previa,
+        timestamp: serverTimestamp(), lida: false,
       });
     } catch (e) {
       console.error(e);
@@ -90,6 +91,22 @@ function Chat() {
 
   function enviarFigurinha(emoji) {
     enviarMsg(emoji, "figurinha");
+  }
+
+  async function enviarFoto(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setEnviandoFoto(true);
+    try {
+      const url = await uploadCloudinary(file);
+      await enviarMsg("", "foto", url);
+    } catch (err) {
+      console.error(err);
+      alert("não consegui enviar a foto.");
+    } finally {
+      setEnviandoFoto(false);
+    }
   }
 
   if (!alvo) return <p className="vazio">carregando...</p>;
@@ -108,6 +125,7 @@ function Chat() {
       <div className="chat-msgs">
         <div className="chat-msgs-inner">
           {msgs.length === 0 && <p className="vazio">nenhuma mensagem ainda. manda a primeira!</p>}
+          {enviandoFoto && <p className="vazio">enviando foto...</p>}
           {msgs.map((m) => {
             const minha = m.autorUid === user.uid;
             if (m.tipo === "figurinha") {
@@ -117,10 +135,16 @@ function Chat() {
                 </div>
               );
             }
+            if (m.tipo === "foto") {
+              return (
+                <div key={m.id} className={"msg msg-foto-wrap " + (minha ? "msg-minha" : "msg-dele")}>
+                  <img src={m.fotoURL} alt="" className="msg-foto" onClick={() => setFotoAmpliada(m.fotoURL)} />
+                  {m.texto && <p className="msg-foto-legenda">{m.texto}</p>}
+                </div>
+              );
+            }
             return (
-              <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>
-                {m.texto}
-              </div>
+              <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>{m.texto}</div>
             );
           })}
           <div ref={fimRef} />
@@ -130,10 +154,14 @@ function Chat() {
       {pickerAberto && <StickerPicker onSelect={enviarFigurinha} />}
 
       <div className="chat-input-bar">
-        <button className="chat-sticker-btn" onClick={() => setPickerAberto(!pickerAberto)}
-          aria-label="figurinhas">
+        <button className="chat-sticker-btn" onClick={() => setPickerAberto(!pickerAberto)} aria-label="figurinhas">
           <Smile size={22} />
         </button>
+        <button className="chat-sticker-btn" onClick={() => fotoRef.current?.click()}
+          disabled={enviandoFoto} aria-label="enviar foto">
+          <ImageIcon size={22} />
+        </button>
+        <input ref={fotoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={enviarFoto} />
         <input className="chat-input" placeholder="mensagem..." value={texto}
           onChange={(e) => setTexto(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") enviar(); }}
@@ -142,6 +170,12 @@ function Chat() {
           <Send size={20} />
         </button>
       </div>
+      {fotoAmpliada && (
+        <div className="foto-overlay" onClick={() => setFotoAmpliada(null)}>
+          <button className="foto-fechar" onClick={() => setFotoAmpliada(null)}><X size={24} /></button>
+          <img src={fotoAmpliada} alt="" className="foto-ampliada" />
+        </div>
+      )}
     </div>
   );
 }
