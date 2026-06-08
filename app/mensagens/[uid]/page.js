@@ -122,8 +122,12 @@ function Chat() {
 
   useEffect(() => {
     if (!uid || !user) return;
-    getDoc(doc(db, "usuarios", uid)).then((s) => setAlvo(s.exists() ? s.data() : {}));
+    // perfil do alvo em tempo real (pra pegar online/offline)
+    const unsub = onSnapshot(doc(db, "usuarios", uid), (snap) => {
+      setAlvo(snap.exists() ? snap.data() : {});
+    });
     getDoc(doc(db, "usuarios", user.uid)).then((s) => setEu(s.exists() ? s.data() : {}));
+    return () => unsub();
   }, [uid, user]);
 
   useEffect(() => {
@@ -277,16 +281,31 @@ function Chat() {
     }
   }
 
+  function statusTexto() {
+    if (!alvo) return "";
+    if (alvo.online) return "online agora";
+    if (!alvo.ultimoAcesso?.seconds) return "";
+    const diff = Date.now() / 1000 - alvo.ultimoAcesso.seconds;
+    if (diff < 120) return "online agora";
+    if (diff < 3600) return `visto há ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `visto há ${Math.floor(diff / 3600)}h`;
+    return `visto há ${Math.floor(diff / 86400)}d`;
+  }
+
   if (!alvo) return <p className="vazio">carregando...</p>;
 
   return (
     <div className="chat">
       <Link href={`/perfil/${uid}`} className="chat-topo">
         <ArrowLeft size={20} />
-        <div className="avatar-mini">
+        <div className="avatar-mini" style={{ position: "relative" }}>
           {alvo.fotoURL ? <img src={alvo.fotoURL} className="avatar-img" alt="" /> : (alvo.nome || "?").charAt(0).toUpperCase()}
+          {alvo.online && <span className="online-dot" />}
         </div>
-        <span className="chat-nome">{alvo.nome || "usuário"}</span>
+        <div>
+          <span className="chat-nome">{alvo.nome || "usuário"}</span>
+          <p className="chat-status">{statusTexto()}</p>
+        </div>
       </Link>
 
       <div className="chat-msgs">

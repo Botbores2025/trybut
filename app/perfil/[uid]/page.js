@@ -135,19 +135,31 @@ function Perfil() {
   const nomeMostrado = perfil.nome || "sem nome";
   const local = perfil.cidade ? perfil.cidade : "Brasil";
 
+  function statusTexto() {
+    if (ehMeu) return "";
+    if (perfil.online) return "online agora";
+    if (!perfil.ultimoAcesso?.seconds) return "";
+    const diff = Date.now() / 1000 - perfil.ultimoAcesso.seconds;
+    if (diff < 120) return "online agora";
+    if (diff < 3600) return `visto há ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `visto há ${Math.floor(diff / 3600)}h`;
+    return `visto há ${Math.floor(diff / 86400)}d`;
+  }
+
   return (
     <>
       <section className="card">
         <div className="perfil-cabecalho">
           <div className="avatar" onClick={ehMeu ? abrirSeletor : undefined}
-            title={ehMeu ? "trocar foto" : ""} style={{ cursor: ehMeu ? "pointer" : "default" }}>
+            title={ehMeu ? "trocar foto" : ""} style={{ cursor: ehMeu ? "pointer" : "default", position: "relative" }}>
             {perfil.fotoURL
               ? <img src={perfil.fotoURL} alt="foto de perfil" className="avatar-img" />
               : nomeMostrado.charAt(0).toUpperCase()}
+            {!ehMeu && perfil.online && <span className="online-dot online-dot-perfil" />}
           </div>
           <div style={{ flex: 1 }}>
             <p className="perfil-nome">{nomeMostrado}</p>
-            <p className="perfil-local">{local}</p>
+            <p className="perfil-local">{local}{statusTexto() ? ` · ${statusTexto()}` : ""}</p>
             {ehMeu ? (
               <button className="link-foto" onClick={abrirSeletor} disabled={enviandoFoto}>
                 {enviandoFoto ? "enviando..." : "trocar foto"}

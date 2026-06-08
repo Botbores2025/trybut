@@ -1315,3 +1315,28 @@ textarea { resize: vertical; }
   color: var(--texto-fraco);
   font-style: italic;
 }
+
+/* ---------- Online/Offline status ---------- */
+.online-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid var(--branco);
+}
+.online-dot-perfil {
+  width: 14px;
+  height: 14px;
+  bottom: 2px;
+  right: 2px;
+}
+.chat-status {
+  margin: 0;
+  font-size: 11px;
+  color: #22c55e;
+  font-weight: 600;
+}
+[data-theme="dark"] .online-dot { border-color: var(--branco); }
