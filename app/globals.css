@@ -1575,3 +1575,33 @@ textarea { resize: vertical; }
   opacity: 0.5;
   font-size: 13px;
 }
+
+/* ---------- Página de configurações ---------- */
+.config-bloqueado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borda);
+}
+.config-bloqueado:last-child { border-bottom: none; }
+.config-bloqueado-nome {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+  text-decoration: none;
+}
+.config-bloqueado-nome:hover { color: var(--laranja); }
+.config-desbloquear {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #fee2e2;
+  color: #ef4444;
+}
+.config-desbloquear:hover { background: #fecaca; }
+.salvo { color: #22c55e; font-size: 13px; font-weight: 600; }
+.erro { color: #ef4444; font-size: 13px; font-weight: 600; }
