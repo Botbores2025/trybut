@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { uploadCloudinary } from "@/lib/cloudinary";
 import AppShell from "@/components/AppShell";
 import StickerPicker from "@/components/StickerPicker";
+import AudioMsg from "@/components/AudioMsg";
 import { ArrowLeft, Send, Smile, Image as ImageIcon, X, Mic, Square, Pencil, UserPlus, LogOut } from "lucide-react";
 
 export default function GrupoChatPage() {
@@ -220,7 +221,9 @@ function GrupoChat() {
       </div>
 
       {painelConfig && (
-        <div className="grupo-config">
+        <>
+          <div className="grupo-config-overlay" onClick={() => setPainelConfig(false)} />
+          <div className="grupo-config">
           {ehCriador && (
             <div style={{ marginBottom: 12 }}>
               <button
@@ -278,6 +281,7 @@ function GrupoChat() {
             sair do grupo
           </button>
         </div>
+        </>
       )}
 
       <div className="chat-msgs">
@@ -294,9 +298,9 @@ function GrupoChat() {
               </div>
             );
             if (m.tipo === "audio" && m.audioURL) return (
-              <div key={m.id} className={"msg msg-audio-wrap " + (minha ? "msg-minha" : "msg-dele")}>
-                {!minha && <p className="msg-autor">{m.autorNome}</p>}
-                <audio src={m.audioURL} controls preload="metadata" className="msg-audio" />
+              <div key={m.id} style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: minha ? "flex-end" : "flex-start" }}>
+                {!minha && <p className="msg-autor" style={{ marginBottom: 2 }}>{m.autorNome}</p>}
+                <AudioMsg src={m.audioURL} minha={minha} timestamp={m.timestamp} />
               </div>
             );
             return <div key={m.id} className={"msg " + (minha ? "msg-minha" : "msg-dele")}>{!minha && <p className="msg-autor">{m.autorNome}</p>}{m.texto}</div>;
