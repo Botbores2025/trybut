@@ -39,6 +39,10 @@ function Perfil() {
   const [nome, setNome] = useState("");
   const [cidade, setCidade] = useState("");
   const [bio, setBio] = useState("");
+  const [trabalho, setTrabalho] = useState("");
+  const [escola, setEscola] = useState("");
+  const [nascimento, setNascimento] = useState("");
+  const [relacionamento, setRelacionamento] = useState("");
   const [salvo, setSalvo] = useState(false);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
   const fileRef = useRef(null);
@@ -53,6 +57,10 @@ function Perfil() {
       setNome(dados.nome || "");
       setCidade(dados.cidade || "");
       setBio(dados.bio || "");
+      setTrabalho(dados.trabalho || "");
+      setEscola(dados.escola || "");
+      setNascimento(dados.nascimento || "");
+      setRelacionamento(dados.relacionamento || "");
 
       const q = query(collection(db, "posts"), where("autorUid", "==", uid));
       const ps = await getDocs(q);
@@ -69,13 +77,27 @@ function Perfil() {
   }, [uid, user]);
 
   async function salvar() {
-    const dados = { nome: nome.trim(), cidade: cidade.trim(), bio: bio.trim() };
+    const dados = {
+      nome: nome.trim(),
+      cidade: cidade.trim(),
+      bio: bio.trim(),
+      trabalho: trabalho.trim(),
+      escola: escola.trim(),
+      nascimento: nascimento,
+      relacionamento: relacionamento,
+    };
     try {
       await updateDoc(doc(db, "usuarios", uid), dados);
       setPerfil((p) => ({ ...p, ...dados }));
       setSalvo(true);
       setTimeout(() => setSalvo(false), 2000);
     } catch (e) { console.error(e); alert("não consegui salvar."); }
+  }
+
+  function formatarNascimento(dateStr) {
+    if (!dateStr) return "";
+    const [ano, mes, dia] = dateStr.split("-");
+    return `${dia}/${mes}/${ano}`;
   }
 
   function abrirSeletor() { if (!enviandoFoto) fileRef.current?.click(); }
@@ -239,6 +261,15 @@ function Perfil() {
         {perfil.bio && <p className="perfil-bio">{perfil.bio}</p>}
         <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onSelecionarFoto} />
 
+        {(perfil.trabalho || perfil.escola || perfil.nascimento || perfil.relacionamento) && (
+          <div className="perfil-info-extra">
+            {perfil.trabalho && <p className="perfil-info-item">💼 Trabalha na <strong>{perfil.trabalho}</strong></p>}
+            {perfil.escola && <p className="perfil-info-item">🎓 Estuda/estudou na <strong>{perfil.escola}</strong></p>}
+            {perfil.nascimento && <p className="perfil-info-item">🎂 Nascido em <strong>{formatarNascimento(perfil.nascimento)}</strong></p>}
+            {perfil.relacionamento && <p className="perfil-info-item">💕 <strong>{perfil.relacionamento}</strong></p>}
+          </div>
+        )}
+
         <div className="stats">
           <div className="stat"><strong>{posts.length}</strong><span>posts</span></div>
           <div className="stat stat-clicavel" onClick={async () => {
@@ -285,6 +316,21 @@ function Perfil() {
             <input value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="sua cidade" /></div>
           <div className="campo"><label>quem sou eu</label>
             <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="escreva algo sobre você..." /></div>
+          <div className="campo"><label>trabalho</label>
+            <input value={trabalho} onChange={(e) => setTrabalho(e.target.value)} placeholder="onde você trabalha?" /></div>
+          <div className="campo"><label>escola</label>
+            <input value={escola} onChange={(e) => setEscola(e.target.value)} placeholder="onde você estuda/estudou?" /></div>
+          <div className="campo"><label>data de nascimento</label>
+            <input type="date" value={nascimento} onChange={(e) => setNascimento(e.target.value)} /></div>
+          <div className="campo"><label>relacionamento</label>
+            <select value={relacionamento} onChange={(e) => setRelacionamento(e.target.value)}>
+              <option value="">não informado</option>
+              <option value="solteiro(a)">solteiro(a)</option>
+              <option value="namorando">namorando</option>
+              <option value="casado(a)">casado(a)</option>
+              <option value="é complicado">é complicado</option>
+            </select>
+          </div>
           <button className="btn-primario" onClick={salvar}>salvar</button>
           {salvo && <p className="salvo">salvo!</p>}
         </section>

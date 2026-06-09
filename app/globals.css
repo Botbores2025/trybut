@@ -1633,6 +1633,32 @@ textarea { resize: vertical; }
 .grupo-sair { margin-top: 16px; width: 100%; padding: 10px; border: none; border-radius: 10px; background: #fee2e2; color: #ef4444; font-weight: 700; font-size: 14px; cursor: pointer; font-family: 'Nunito', sans-serif; }
 .grupo-sair:hover { background: #fecaca; }
 
+/* ---------- Perfil — informações extras ---------- */
+.perfil-info-extra { padding: 0 20px 8px; }
+.perfil-info-item { font-size: 14px; color: var(--texto-fraco); margin: 4px 0; line-height: 1.5; }
+.perfil-info-item strong { color: var(--texto); }
+.campo select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--borda);
+  background: var(--branco);
+  color: var(--texto);
+  font-size: 14px;
+  font-family: 'Nunito', sans-serif;
+  -webkit-appearance: none;
+  appearance: none;
+}
+[data-theme="dark"] .campo select {
+  background: var(--branco);
+  color: var(--texto);
+  border-color: var(--borda);
+}
+@media (max-width: 600px) {
+  .perfil-info-extra { padding: 0 16px 8px; }
+  .campo input, .campo select, .campo textarea { font-size: 16px; }
+}
+
 /* ---------- Read receipts (✓ checks) ---------- */
 .msg-check {
   font-size: 11px;
