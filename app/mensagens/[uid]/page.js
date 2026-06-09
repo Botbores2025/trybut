@@ -339,6 +339,7 @@ function Chat() {
           {msgs.map((m) => {
             const minha = m.autorUid === user.uid;
             const menuAberto = menuMsgId === m.id;
+            const wrap = { width: "100%", display: "flex", flexDirection: "column", alignItems: minha ? "flex-end" : "flex-start" };
             const quote = m.respostaA ? (
               <div className="msg-quote" onClick={(e) => e.stopPropagation()}>
                 <span className="msg-quote-nome">{m.respostaA.autorNome}</span>
@@ -348,18 +349,18 @@ function Chat() {
               </div>
             ) : null;
             const menu = menuAberto ? (
-              <div className={"msg-menu " + (minha ? "msg-menu-dir" : "msg-menu-esq")}>
+              <div className="msg-menu">
                 <button onClick={() => { setRespondendoA(m); setMenuMsgId(null); }}>responder</button>
                 {minha && m.tipo !== "apagada" && <button className="msg-menu-apagar" onClick={() => apagarMsg(m.id)}>apagar</button>}
               </div>
             ) : null;
             if (m.tipo === "apagada") return (
-              <div key={m.id} className={"msg msg-apagada " + (minha ? "msg-minha" : "msg-dele")}>
-                mensagem apagada
+              <div key={m.id} style={wrap}>
+                <div className={"msg msg-apagada " + (minha ? "msg-minha" : "msg-dele")}>mensagem apagada</div>
               </div>
             );
             if (m.tipo === "figurinha") return (
-              <div key={m.id} style={{ alignSelf: minha ? "flex-end" : "flex-start" }}>
+              <div key={m.id} style={wrap}>
                 <div className={"msg-figurinha " + (minha ? "msg-minha" : "msg-dele")} onClick={() => clickMsg(m)}>
                   {quote}<span className="figurinha">{m.texto}</span>
                 </div>
@@ -367,7 +368,7 @@ function Chat() {
               </div>
             );
             if (m.tipo === "foto" && m.fotoURL) return (
-              <div key={m.id} style={{ alignSelf: minha ? "flex-end" : "flex-start" }}>
+              <div key={m.id} style={wrap}>
                 <div className={"msg msg-foto-wrap " + (minha ? "msg-minha" : "msg-dele")} onClick={() => clickMsg(m)}>
                   {quote}<img src={m.fotoURL} alt="" className="msg-foto" onClick={(e) => { e.stopPropagation(); setFotoAmpliada(m.fotoURL); }} />
                 </div>
@@ -375,14 +376,14 @@ function Chat() {
               </div>
             );
             if (m.tipo === "audio") return (
-              <div key={m.id} onClick={() => clickMsg(m)} style={{ alignSelf: minha ? "flex-end" : "flex-start" }}>
+              <div key={m.id} style={wrap} onClick={() => clickMsg(m)}>
                 {quote && <div className={"msg " + (minha ? "msg-minha" : "msg-dele")} style={{marginBottom:2, padding:"6px 10px"}}>{quote}</div>}
                 <AudioMsg src={m.audioURL} minha={minha} timestamp={m.timestamp} />
                 {menu}
               </div>
             );
             if (m.texto) return (
-              <div key={m.id} style={{ alignSelf: minha ? "flex-end" : "flex-start" }}>
+              <div key={m.id} style={wrap}>
                 <div className={"msg " + (minha ? "msg-minha" : "msg-dele")} onClick={() => clickMsg(m)}>
                   {quote}{m.texto}
                 </div>
