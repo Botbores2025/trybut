@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   doc, getDoc, setDoc, addDoc, updateDoc, deleteField,
-  collection, query, orderBy, onSnapshot, serverTimestamp,
+  collection, query, orderBy, onSnapshot, serverTimestamp, writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -19,7 +19,7 @@ export default function ChatPage() {
   return <AppShell><Chat /></AppShell>;
 }
 
-function AudioMsg({ src, minha, timestamp }) {
+function AudioMsg({ src, minha, timestamp, check }) {
   const audioRef = useRef(null);
   const [tocando, setTocando] = useState(false);
   const [duracao, setDuracao] = useState(0);
@@ -92,6 +92,7 @@ function AudioMsg({ src, minha, timestamp }) {
           <span className="audio-hora">{formatHora(timestamp)}</span>
         </div>
       </div>
+      {check}
     </div>
   );
 }
@@ -133,10 +134,18 @@ function Chat() {
   }, [uid, user]);
 
   useEffect(() => {
-    if (!cid) return;
+    if (!cid || !user) return;
     const q = query(collection(db, "conversas", cid, "mensagens"), orderBy("timestamp", "asc"));
-    return onSnapshot(q, (snap) => { setMsgs(snap.docs.map((d) => ({ id: d.id, ...d.data() }))); });
-  }, [cid]);
+    return onSnapshot(q, (snap) => {
+      setMsgs(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const naolidas = snap.docs.filter((d) => d.data().autorUid !== user.uid && !d.data().lida);
+      if (naolidas.length > 0) {
+        const batch = writeBatch(db);
+        naolidas.forEach((d) => batch.update(d.ref, { lida: true }));
+        batch.commit().catch(() => {});
+      }
+    });
+  }, [cid, user]);
 
   useEffect(() => {
     if (!cid || !uid) return;
@@ -188,7 +197,7 @@ function Chat() {
         },
         ultimaMensagem: previa, ultimoAutor: user.uid, timestamp: serverTimestamp(),
       }, { merge: true });
-      const msgData = { texto: t || "", tipo: tipo || "texto", autorUid: user.uid, timestamp: serverTimestamp() };
+      const msgData = { texto: t || "", tipo: tipo || "texto", autorUid: user.uid, timestamp: serverTimestamp(), lida: false };
       if (fotoURL) msgData.fotoURL = fotoURL;
       if (audioURL) msgData.audioURL = audioURL;
       if (resposta) {
@@ -361,16 +370,18 @@ function Chat() {
             );
             if (m.tipo === "figurinha") return (
               <div key={m.id} style={wrap}>
-                <div className={"msg-figurinha " + (minha ? "msg-minha" : "msg-dele")} onClick={() => clickMsg(m)}>
+                <div className={"msg-figurinha " + (minha ? "msg-minha" : "msg-dele")} onClick={() => clickMsg(m)} style={{position:"relative", paddingBottom: minha ? "16px" : "2px"}}>
                   {quote}<span className="figurinha">{m.texto}</span>
+                  {minha && <span className={m.lida ? "msg-check" : "msg-check-pendente"} style={{position:"absolute",bottom:2,right:4,marginLeft:0}}>{m.lida ? "✓✓" : "✓"}</span>}
                 </div>
                 {menu}
               </div>
             );
             if (m.tipo === "foto" && m.fotoURL) return (
               <div key={m.id} style={wrap}>
-                <div className={"msg msg-foto-wrap " + (minha ? "msg-minha" : "msg-dele")} onClick={() => clickMsg(m)}>
+                <div className={"msg msg-foto-wrap " + (minha ? "msg-minha" : "msg-dele")} onClick={() => clickMsg(m)} style={{position:"relative", paddingBottom: minha ? "20px" : "4px"}}>
                   {quote}<img src={m.fotoURL} alt="" className="msg-foto" onClick={(e) => { e.stopPropagation(); setFotoAmpliada(m.fotoURL); }} />
+                  {minha && <span className={m.lida ? "msg-check" : "msg-check-pendente"} style={{position:"absolute",bottom:4,right:6,marginLeft:0}}>{m.lida ? "✓✓" : "✓"}</span>}
                 </div>
                 {menu}
               </div>
@@ -378,14 +389,15 @@ function Chat() {
             if (m.tipo === "audio") return (
               <div key={m.id} style={wrap} onClick={() => clickMsg(m)}>
                 {quote && <div className={"msg " + (minha ? "msg-minha" : "msg-dele")} style={{marginBottom:2, padding:"6px 10px"}}>{quote}</div>}
-                <AudioMsg src={m.audioURL} minha={minha} timestamp={m.timestamp} />
+                <AudioMsg src={m.audioURL} minha={minha} timestamp={m.timestamp}
+                  check={minha ? <span className={m.lida ? "msg-check" : "msg-check-pendente"}>{m.lida ? "✓✓" : "✓"}</span> : null} />
                 {menu}
               </div>
             );
             if (m.texto) return (
               <div key={m.id} style={wrap}>
                 <div className={"msg " + (minha ? "msg-minha" : "msg-dele")} onClick={() => clickMsg(m)}>
-                  {quote}{m.texto}
+                  {quote}{m.texto}{minha && <span className={m.lida ? "msg-check" : "msg-check-pendente"}>{m.lida ? "✓✓" : "✓"}</span>}
                 </div>
                 {menu}
               </div>
