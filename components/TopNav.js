@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Home, MessageCircle, Users, User, Search, Bell, Moon, Sun } from "lucide-react";
+import { Home, MessageCircle, Users, User, Search, Bell, Moon, Sun, Settings } from "lucide-react";
 
 export default function TopNav() {
   const path = usePathname();
@@ -64,6 +64,9 @@ export default function TopNav() {
       <div className="topnav-bar">
         <Link href="/" className="logo logo-topo" style={{ textDecoration: "none" }}>trybut</Link>
         <div className="topnav-icones">
+          <Link href="/configuracoes" className={"topnav-circ" + (path === "/configuracoes" ? " ativo" : "")} aria-label="configurações">
+            <Settings size={19} />
+          </Link>
           <button className="topnav-circ" onClick={toggleTema} aria-label="modo escuro">
             {escuro ? <Sun size={19} /> : <Moon size={19} />}
           </button>
