@@ -1547,3 +1547,31 @@ textarea { resize: vertical; }
   color: var(--texto-fraco);
   margin: 2px 0 0;
 }
+
+/* ---------- Menu de mensagem + apagar ---------- */
+.msg-menu {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+.msg-menu-dir { justify-content: flex-end; }
+.msg-menu-esq { justify-content: flex-start; }
+.msg-menu button {
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--fundo);
+  color: var(--texto-fraco);
+}
+.msg-menu button:hover { background: var(--borda); color: var(--texto); }
+.msg-menu-apagar { color: #ef4444 !important; }
+.msg-menu-apagar:hover { background: #fee2e2 !important; color: #ef4444 !important; }
+.msg-apagada {
+  font-style: italic;
+  opacity: 0.5;
+  font-size: 13px;
+}
