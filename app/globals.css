@@ -1470,3 +1470,80 @@ textarea { resize: vertical; }
 }
 .amigo-item:hover .amigo-nome { color: var(--laranja); }
 .amigo-nome { font-size: 14px; font-weight: 600; }
+
+/* ---------- Enquetes no feed ---------- */
+.btn-foto-ativo {
+  background: var(--laranja) !important;
+  color: #fff !important;
+}
+.enquete-opcoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+}
+.enquete-input {
+  font-size: 14px;
+  padding: 10px 14px;
+}
+.enquete-add {
+  background: none;
+  border: none;
+  color: var(--laranja);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 0;
+  text-align: left;
+}
+.enquete-add:hover { text-decoration: underline; }
+.enquete-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0;
+}
+.enquete-opcao {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 2px solid var(--borda);
+  border-radius: 10px;
+  background: var(--fundo);
+  cursor: pointer;
+  overflow: hidden;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+.enquete-opcao:hover:not(:disabled) { border-color: var(--laranja); }
+.enquete-opcao.votado { cursor: default; }
+.enquete-opcao.minha { border-color: var(--laranja); font-weight: 700; }
+.enquete-barra {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--laranja-claro);
+  border-radius: 8px;
+  transition: width 0.5s ease;
+  z-index: 0;
+}
+.enquete-opcao.minha .enquete-barra { background: var(--laranja); opacity: 0.2; }
+.enquete-opcao-texto { position: relative; z-index: 1; }
+.enquete-pct {
+  position: relative;
+  z-index: 1;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--texto-fraco);
+}
+.enquete-opcao.minha .enquete-pct { color: var(--laranja); }
+.enquete-total {
+  font-size: 12px;
+  color: var(--texto-fraco);
+  margin: 2px 0 0;
+}

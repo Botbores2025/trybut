@@ -28,7 +28,7 @@ import { buscarAmigosUids } from "@/lib/social";
 import AppShell from "@/components/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
 import Link from "next/link";
-import { Heart, MessageCircle, Image as ImageIcon, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Image as ImageIcon, Trash2, BarChart3 } from "lucide-react";
 
 export default function FeedPage() {
   return (
@@ -68,6 +68,8 @@ function Feed() {
   const [enviando, setEnviando] = useState(false);
   const [amigosUids, setAmigosUids] = useState(null);
   const [stories, setStories] = useState([]);
+  const [modoEnquete, setModoEnquete] = useState(false);
+  const [opcoes, setOpcoes] = useState(["", ""]);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -173,6 +175,45 @@ function Feed() {
     }
   }
 
+  async function publicarEnquete() {
+    if (!user) return;
+    const q = texto.trim();
+    const ops = opcoes.map((o) => o.trim()).filter((o) => o);
+    if (!q) { alert("escreva a pergunta da enquete!"); return; }
+    if (ops.length < 2) { alert("precisa de pelo menos 2 opções!"); return; }
+    setEnviando(true);
+    try {
+      await addDoc(collection(db, "posts"), {
+        autorUid: user.uid,
+        autorNome: perfil?.nome || "alguém",
+        autorFoto: perfil?.fotoURL || "",
+        tipo: "enquete",
+        texto: q,
+        opcoes: ops,
+        votos: {},
+        criadoEm: serverTimestamp(),
+      });
+      if (amigosUids && amigosUids.length > 0) {
+        const nBatch = writeBatch(db);
+        for (const aUid of amigosUids.slice(0, 100)) {
+          nBatch.set(doc(collection(db, "notificacoes")), {
+            tipo: "post", deUid: user.uid, deNome: perfil?.nome || "alguém",
+            deFoto: perfil?.fotoURL || "", paraUid: aUid,
+            previa: "criou uma enquete: " + q.slice(0, 40),
+            timestamp: serverTimestamp(), lida: false,
+          });
+        }
+        await nBatch.commit();
+      }
+      setTexto(""); setOpcoes(["", ""]); setModoEnquete(false);
+    } catch (e) {
+      console.error(e);
+      alert("não consegui publicar a enquete.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
   return (
     <>
       {/* barra de stories */}
@@ -207,28 +248,41 @@ function Feed() {
           <textarea
             className="composer-input"
             rows={2}
-            placeholder="compartilhe algo com sua tribo..."
+            placeholder={modoEnquete ? "faça uma pergunta..." : "compartilhe algo com sua tribo..."}
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
           />
         </div>
-        {foto && <p className="composer-foto-aviso">foto selecionada: {foto.name}</p>}
+        {modoEnquete && (
+          <div className="enquete-opcoes">
+            {opcoes.map((op, i) => (
+              <input key={i} className="enquete-input" placeholder={`opção ${i + 1}`}
+                value={op} onChange={(e) => {
+                  const novas = [...opcoes]; novas[i] = e.target.value; setOpcoes(novas);
+                }} />
+            ))}
+            {opcoes.length < 4 && (
+              <button className="enquete-add" onClick={() => setOpcoes([...opcoes, ""])}>
+                + adicionar opção
+              </button>
+            )}
+          </div>
+        )}
+        {!modoEnquete && foto && <p className="composer-foto-aviso">foto selecionada: {foto.name}</p>}
         <div className="composer-acoes">
-          <button className="btn-foto" onClick={() => fileRef.current?.click()}>
-            <ImageIcon size={18} /> foto
+          {!modoEnquete && (
+            <button className="btn-foto" onClick={() => fileRef.current?.click()}>
+              <ImageIcon size={18} /> foto
+            </button>
+          )}
+          <button className={"btn-foto" + (modoEnquete ? " btn-foto-ativo" : "")}
+            onClick={() => { setModoEnquete(!modoEnquete); setFoto(null); }}>
+            <BarChart3 size={18} /> enquete
           </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={(e) => setFoto(e.target.files?.[0] || null)}
-          />
-          <button
-            className="btn-primario btn-publicar"
-            onClick={publicar}
-            disabled={enviando}
-          >
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }}
+            onChange={(e) => setFoto(e.target.files?.[0] || null)} />
+          <button className="btn-primario btn-publicar"
+            onClick={modoEnquete ? publicarEnquete : publicar} disabled={enviando}>
             {enviando ? "publicando..." : "publicar"}
           </button>
         </div>
@@ -242,6 +296,49 @@ function Feed() {
         <Post key={post.id} post={post} user={user} meuPerfil={perfil} />
       ))}
     </>
+  );
+}
+
+function Enquete({ post, user }) {
+  const votos = post.votos || {};
+  const meuVoto = votos[user.uid];
+  const jaVotou = meuVoto !== undefined;
+  const totalVotos = Object.keys(votos).length;
+
+  const contagemPorOpcao = {};
+  Object.values(votos).forEach((i) => {
+    contagemPorOpcao[i] = (contagemPorOpcao[i] || 0) + 1;
+  });
+
+  async function votar(indice) {
+    if (jaVotou) return;
+    try {
+      await updateDoc(doc(db, "posts", post.id), {
+        [`votos.${user.uid}`]: indice,
+      });
+    } catch (e) {
+      console.error(e);
+      alert("não consegui votar. tenta de novo.");
+    }
+  }
+
+  return (
+    <div className="enquete-body">
+      {(post.opcoes || []).map((op, i) => {
+        const count = contagemPorOpcao[i] || 0;
+        const pct = totalVotos > 0 ? Math.round((count / totalVotos) * 100) : 0;
+        const ehMinha = meuVoto === i;
+        return (
+          <button key={i} className={"enquete-opcao" + (jaVotou ? " votado" : "") + (ehMinha ? " minha" : "")}
+            onClick={() => votar(i)} disabled={jaVotou}>
+            <div className="enquete-barra" style={{ width: jaVotou ? `${pct}%` : "0%" }} />
+            <span className="enquete-opcao-texto">{op}</span>
+            {jaVotou && <span className="enquete-pct">{pct}%</span>}
+          </button>
+        );
+      })}
+      <p className="enquete-total">{totalVotos} {totalVotos === 1 ? "voto" : "votos"}</p>
+    </div>
   );
 }
 
@@ -364,7 +461,9 @@ function Post({ post, user, meuPerfil }) {
         />
       )}
       {post.texto && <p className="post-texto">{post.texto}</p>}
-      {post.fotoURL && <img src={post.fotoURL} alt="" className="post-imagem" />}
+      {post.fotoURL && post.tipo !== "enquete" && <img src={post.fotoURL} alt="" className="post-imagem" />}
+
+      {post.tipo === "enquete" && <Enquete post={post} user={user} />}
 
       {totalReacoes > 0 && (
         <div className="reacoes-resumo">
