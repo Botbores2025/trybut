@@ -1605,6 +1605,14 @@ textarea { resize: vertical; }
 .config-desbloquear:hover { background: #fecaca; }
 .salvo { color: #22c55e; font-size: 13px; font-weight: 600; }
 
+/* ---------- Gerenciamento de grupo ---------- */
+.grupo-config { padding: 12px 0; border-top: 1px solid var(--borda); }
+.grupo-membro { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.grupo-membro-nome { font-size: 14px; font-weight: 600; flex: 1; }
+.grupo-membro-rm { font-size: 11px; color: #ef4444; background: #fee2e2; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+.grupo-sair { margin-top: 12px; width: 100%; padding: 10px; border: none; border-radius: 10px; background: #fee2e2; color: #ef4444; font-weight: 700; font-size: 14px; cursor: pointer; font-family: 'Nunito', sans-serif; }
+.grupo-sair:hover { background: #fecaca; }
+
 /* ---------- Read receipts (✓ checks) ---------- */
 .msg-check {
   font-size: 11px;
