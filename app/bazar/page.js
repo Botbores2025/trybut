@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import AppShell from "@/components/AppShell";
 import { ShoppingBag, Plus } from "lucide-react";
@@ -59,25 +59,18 @@ export default function BazarPage() {
     async function carregar() {
       setCarregando(true);
       try {
-        let q;
-        if (categoriaAtiva === "todos") {
-          q = query(
-            collection(db, "anuncios"),
-            where("ativo", "==", true),
-            orderBy("criadoEm", "desc"),
-            limit(50)
-          );
-        } else {
-          q = query(
-            collection(db, "anuncios"),
-            where("ativo", "==", true),
-            where("categoria", "==", categoriaAtiva),
-            orderBy("criadoEm", "desc"),
-            limit(50)
-          );
-        }
+        const q = query(
+          collection(db, "anuncios"),
+          orderBy("criadoEm", "desc"),
+          limit(100)
+        );
         const snap = await getDocs(q);
-        setAnuncios(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        const todos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const ativos = todos.filter((a) => a.ativo !== false);
+        const filtrados = categoriaAtiva === "todos"
+          ? ativos
+          : ativos.filter((a) => a.categoria === categoriaAtiva);
+        setAnuncios(filtrados);
       } catch (e) {
         console.error(e);
       } finally {
