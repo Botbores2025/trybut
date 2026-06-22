@@ -1676,6 +1676,32 @@ textarea { resize: vertical; }
 }
 .erro { color: #ef4444; font-size: 13px; font-weight: 600; }
 
+/* ---------- Mural de recados (Orkut) ---------- */
+.mural-section { margin-top: 16px; }
+.mural-titulo { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; padding: 0 4px; }
+.mural-form { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; }
+.mural-form textarea { flex: 1; resize: none; font-size: 14px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--borda); background: var(--branco); color: var(--texto); font-family: 'Nunito', sans-serif; }
+.mural-form textarea:focus { outline: none; border-color: var(--laranja); }
+.mural-enviar { padding: 10px 16px; border: none; border-radius: 10px; background: var(--laranja); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; font-family: 'Nunito', sans-serif; white-space: nowrap; }
+.mural-enviar:disabled { opacity: 0.5; }
+.recado-card { padding: 12px; border-bottom: 1px solid var(--borda); position: relative; }
+.recado-card:last-child { border-bottom: none; }
+.recado-topo { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.recado-nome { font-size: 14px; font-weight: 700; color: var(--texto); text-decoration: none; }
+.recado-nome:hover { color: var(--laranja); }
+.recado-tempo { font-size: 11px; color: var(--texto-fraco); margin-left: auto; }
+.recado-texto { font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+.recado-excluir { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--texto-fraco); cursor: pointer; font-size: 14px; padding: 2px; line-height: 1; }
+.recado-excluir:hover { color: #ef4444; }
+.mural-aviso { font-size: 13px; color: var(--texto-fraco); font-style: italic; }
+@media (max-width: 600px) {
+  .mural-form { flex-direction: column; }
+  .mural-form textarea { font-size: 16px; }
+  .mural-enviar { width: 100%; padding: 12px; }
+  .recado-card { padding: 10px; }
+}
+[data-theme="dark"] .mural-form textarea { background: var(--branco); color: var(--texto); border-color: var(--borda); }
+
 /* ---------- Sistema de XP e níveis ---------- */
 .nivel-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 10px; color: #fff; font-size: 12px; font-weight: 700; margin-left: 8px; vertical-align: middle; }
 .nivel-badge-mini { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 11px; margin-left: 4px; flex-shrink: 0; vertical-align: middle; }

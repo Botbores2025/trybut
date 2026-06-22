@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { signOut } from "firebase/auth";
 import {
-  doc, getDoc, updateDoc, collection, query, where, getDocs,
+  doc, getDoc, updateDoc, addDoc, deleteDoc,
+  collection, query, where, orderBy, limit, getDocs, serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -59,6 +60,9 @@ function Perfil() {
   const [temaPerfil, setTemaPerfil] = useState("");
   const [salvo, setSalvo] = useState(false);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [recados, setRecados] = useState([]);
+  const [novoRecado, setNovoRecado] = useState("");
+  const [enviandoRecado, setEnviandoRecado] = useState(false);
   const fileRef = useRef(null);
   const capaRef = useRef(null);
 
@@ -90,6 +94,57 @@ function Perfil() {
       }
     })();
   }, [uid, user]);
+
+  useEffect(() => {
+    if (!uid) return;
+    (async () => {
+      try {
+        const q = query(
+          collection(db, "usuarios", uid, "recados"),
+          orderBy("criadoEm", "desc"),
+          limit(20)
+        );
+        const snap = await getDocs(q);
+        setRecados(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      } catch (e) { console.error(e); }
+    })();
+  }, [uid]);
+
+  async function enviarRecado() {
+    const t = novoRecado.trim();
+    if (!t || !user) return;
+    setEnviandoRecado(true);
+    try {
+      const autorNome = ehMeu ? (perfil?.nome || "eu") : (meuPerfil?.nome || "");
+      const autorFoto = ehMeu ? (perfil?.fotoURL || "") : (meuPerfil?.fotoURL || "");
+      const ref = await addDoc(collection(db, "usuarios", uid, "recados"), {
+        autorUid: user.uid,
+        autorNome,
+        autorFoto,
+        texto: t,
+        criadoEm: serverTimestamp(),
+      });
+      setRecados((prev) => [{ id: ref.id, autorUid: user.uid, autorNome, autorFoto, texto: t, criadoEm: null }, ...prev]);
+      setNovoRecado("");
+    } catch (e) { console.error(e); alert("não consegui enviar o recado."); }
+    finally { setEnviandoRecado(false); }
+  }
+
+  async function excluirRecado(recadoId) {
+    try {
+      await deleteDoc(doc(db, "usuarios", uid, "recados", recadoId));
+      setRecados((prev) => prev.filter((r) => r.id !== recadoId));
+    } catch (e) { console.error(e); alert("não consegui excluir o recado."); }
+  }
+
+  function tempoRecado(ts) {
+    if (!ts?.seconds) return "agora";
+    const seg = Math.floor(Date.now() / 1000 - ts.seconds);
+    if (seg < 60) return "agora";
+    if (seg < 3600) return `há ${Math.floor(seg / 60)} min`;
+    if (seg < 86400) return `há ${Math.floor(seg / 3600)} h`;
+    return `há ${Math.floor(seg / 86400)} d`;
+  }
 
   async function salvar() {
     const dados = {
@@ -423,6 +478,56 @@ function Perfil() {
             </article>
           ))}
         </>
+      )}
+
+      {relacao !== "bloqueado" && (
+        <section className="card mural-section">
+          <p className="mural-titulo">📋 mural de recados</p>
+
+          {(ehMeu || relacao === "amigos") ? (
+            <div className="mural-form">
+              <div className="avatar-mini" style={{ flexShrink: 0 }}>
+                {(ehMeu ? perfil?.fotoURL : meuPerfil?.fotoURL)
+                  ? <img src={ehMeu ? perfil.fotoURL : meuPerfil.fotoURL} className="avatar-img" alt="" />
+                  : ((ehMeu ? perfil?.nome : meuPerfil?.nome) || "?").charAt(0).toUpperCase()}
+              </div>
+              <textarea
+                rows={2}
+                maxLength={500}
+                placeholder="deixe um recado..."
+                value={novoRecado}
+                onChange={(e) => setNovoRecado(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey && !enviandoRecado) enviarRecado(); }}
+              />
+              <button className="mural-enviar" onClick={enviarRecado} disabled={enviandoRecado || !novoRecado.trim()}>
+                {enviandoRecado ? "..." : "enviar"}
+              </button>
+            </div>
+          ) : (
+            <p className="mural-aviso">adicione como amigo para deixar um recado</p>
+          )}
+
+          {recados.length === 0
+            ? <p className="vazio">nenhum recado ainda. seja o primeiro!</p>
+            : recados.map((r) => (
+              <div key={r.id} className="recado-card">
+                <div className="recado-topo">
+                  <div className="avatar-mini" style={{ flexShrink: 0 }}>
+                    {r.autorFoto
+                      ? <img src={r.autorFoto} className="avatar-img" alt="" />
+                      : (r.autorNome || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <Link href={`/perfil/${r.autorUid}`} className="recado-nome">{r.autorNome || "alguém"}</Link>
+                  <span className="recado-tempo">{tempoRecado(r.criadoEm)}</span>
+                </div>
+                <p className="recado-texto">{r.texto}</p>
+                {(ehMeu || r.autorUid === user?.uid) && (
+                  <button className="recado-excluir" onClick={() => excluirRecado(r.id)} title="excluir">✕</button>
+                )}
+              </div>
+            ))
+          }
+        </section>
       )}
 
       {ehMeu && (
