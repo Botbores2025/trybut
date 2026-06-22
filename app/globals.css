@@ -1676,6 +1676,27 @@ textarea { resize: vertical; }
 }
 .erro { color: #ef4444; font-size: 13px; font-weight: 600; }
 
+/* ---------- Posts salvos (bookmarks) ---------- */
+.btn-salvar { background: none; border: none; cursor: pointer; color: var(--texto-fraco); padding: 6px; transition: color 0.15s; display: flex; align-items: center; }
+.btn-salvar:hover { color: var(--laranja); }
+.btn-salvar.salvo { color: var(--laranja); }
+.salvos-card { padding: 16px; border-bottom: 1px solid var(--borda); }
+.salvos-card:last-child { border-bottom: none; }
+.salvos-topo { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.salvos-autor { font-size: 14px; font-weight: 700; color: var(--texto); text-decoration: none; }
+.salvos-autor:hover { color: var(--laranja); }
+.salvos-tempo { font-size: 11px; color: var(--texto-fraco); margin-left: auto; }
+.salvos-texto { font-size: 14px; line-height: 1.5; margin-bottom: 8px; white-space: pre-wrap; }
+.salvos-imagem { width: 100%; max-height: 300px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; display: block; }
+.salvos-acoes { display: flex; gap: 8px; }
+.salvos-acoes button, .salvos-acoes a { font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; text-decoration: none; text-align: center; }
+.salvos-ver { background: var(--laranja); color: #fff; border: none; }
+.salvos-remover { background: #fee2e2; color: #ef4444; border: none; }
+@media (max-width: 600px) {
+  .salvos-card { padding: 12px; }
+  .salvos-imagem { max-height: 200px; }
+}
+
 /* ---------- Mural de recados (Orkut) ---------- */
 .mural-section { margin-top: 16px; }
 .mural-titulo { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; padding: 0 4px; }

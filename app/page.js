@@ -8,6 +8,7 @@ import {
   limit,
   onSnapshot,
   addDoc,
+  setDoc,
   serverTimestamp,
   doc,
   getDoc,
@@ -29,7 +30,7 @@ import { adicionarXp, getNivel, NIVEIS, XP_ACOES } from "@/lib/xp";
 import AppShell from "@/components/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
 import Link from "next/link";
-import { Heart, MessageCircle, Image as ImageIcon, Trash2, BarChart3 } from "lucide-react";
+import { Heart, MessageCircle, Image as ImageIcon, Trash2, BarChart3, Bookmark } from "lucide-react";
 
 export default function FeedPage() {
   return (
@@ -379,6 +380,24 @@ function Post({ post, user, meuPerfil }) {
   const [comentarios, setComentarios] = useState([]);
   const [novo, setNovo] = useState("");
   const [enviandoCom, setEnviandoCom] = useState(false);
+  const [salvo, setSalvo] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    getDoc(doc(db, "usuarios", user.uid, "salvos", post.id)).then((s) => setSalvo(s.exists()));
+  }, [user, post.id]);
+
+  async function toggleSalvo() {
+    if (!user) return;
+    const ref = doc(db, "usuarios", user.uid, "salvos", post.id);
+    if (salvo) {
+      setSalvo(false);
+      await deleteDoc(ref).catch(() => setSalvo(true));
+    } else {
+      setSalvo(true);
+      await setDoc(ref, { postId: post.id, criadoEm: serverTimestamp() }).catch(() => setSalvo(false));
+    }
+  }
 
   useEffect(() => {
     if (!aberto) return;
@@ -517,6 +536,14 @@ function Post({ post, user, meuPerfil }) {
         </button>
         <button className="post-btn" onClick={() => setAberto((a) => !a)}>
           <MessageCircle size={18} /> {post.comentariosCount || 0}
+        </button>
+        <button
+          className={"btn-salvar" + (salvo ? " salvo" : "")}
+          onClick={toggleSalvo}
+          title={salvo ? "remover dos salvos" : "salvar post"}
+          style={{ marginLeft: "auto" }}
+        >
+          <Bookmark size={18} fill={salvo ? "currentColor" : "none"} />
         </button>
       </div>
 
