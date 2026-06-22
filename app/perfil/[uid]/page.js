@@ -18,6 +18,18 @@ import AppShell from "@/components/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
 import { Share2 } from "lucide-react";
 
+const TEMAS = [
+  { id: "", nome: "trybut (padrão)", cor1: "#f26522", cor2: "#d45a1e" },
+  { id: "roxo", nome: "roxo", cor1: "#8b5cf6", cor2: "#6d28d9" },
+  { id: "azul", nome: "azul oceano", cor1: "#3b82f6", cor2: "#1d4ed8" },
+  { id: "verde", nome: "verde floresta", cor1: "#22c55e", cor2: "#15803d" },
+  { id: "rosa", nome: "rosa", cor1: "#ec4899", cor2: "#be185d" },
+  { id: "vermelho", nome: "vermelho", cor1: "#ef4444", cor2: "#b91c1c" },
+  { id: "dourado", nome: "dourado", cor1: "#f59e0b", cor2: "#b45309" },
+  { id: "ciano", nome: "ciano", cor1: "#06b6d4", cor2: "#0e7490" },
+  { id: "escuro", nome: "noturno", cor1: "#374151", cor2: "#111827" },
+];
+
 export default function PerfilPage() {
   return <AppShell><Perfil /></AppShell>;
 }
@@ -43,6 +55,7 @@ function Perfil() {
   const [escola, setEscola] = useState("");
   const [nascimento, setNascimento] = useState("");
   const [relacionamento, setRelacionamento] = useState("");
+  const [temaPerfil, setTemaPerfil] = useState("");
   const [salvo, setSalvo] = useState(false);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
   const fileRef = useRef(null);
@@ -61,6 +74,7 @@ function Perfil() {
       setEscola(dados.escola || "");
       setNascimento(dados.nascimento || "");
       setRelacionamento(dados.relacionamento || "");
+      setTemaPerfil(dados.temaPerfil || "");
 
       const q = query(collection(db, "posts"), where("autorUid", "==", uid));
       const ps = await getDocs(q);
@@ -85,6 +99,7 @@ function Perfil() {
       escola: escola.trim(),
       nascimento: nascimento,
       relacionamento: relacionamento,
+      temaPerfil: temaPerfil,
     };
     try {
       await updateDoc(doc(db, "usuarios", uid), dados);
@@ -172,6 +187,7 @@ function Perfil() {
   if (!perfil) return <p className="vazio">carregando...</p>;
   const nomeMostrado = perfil.nome || "sem nome";
   const local = perfil.cidade ? perfil.cidade : "Brasil";
+  const tema = TEMAS.find((t) => t.id === (perfil.temaPerfil || "")) || TEMAS[0];
 
   function statusTexto() {
     if (ehMeu) return "";
@@ -191,7 +207,10 @@ function Perfil() {
         <div
           className="perfil-capa"
           onClick={ehMeu ? () => capaRef.current?.click() : undefined}
-          style={perfil.capaURL ? { backgroundImage: `url(${perfil.capaURL})` } : undefined}
+          style={perfil.capaURL
+            ? { backgroundImage: `url(${perfil.capaURL})` }
+            : { background: `linear-gradient(135deg, ${tema.cor1}, ${tema.cor2})` }
+          }
         >
           {ehMeu && <span className="capa-editar">{perfil.capaURL ? "trocar capa" : "adicionar capa"}</span>}
         </div>
@@ -199,7 +218,7 @@ function Perfil() {
 
         <div className="perfil-cabecalho perfil-cabecalho-v2">
           <div className="avatar" onClick={ehMeu ? abrirSeletor : undefined}
-            title={ehMeu ? "trocar foto" : ""} style={{ cursor: ehMeu ? "pointer" : "default", position: "relative" }}>
+            title={ehMeu ? "trocar foto" : ""} style={{ cursor: ehMeu ? "pointer" : "default", position: "relative", borderColor: tema.cor1 }}>
             {perfil.fotoURL
               ? <img src={perfil.fotoURL} alt="foto de perfil" className="avatar-img" />
               : nomeMostrado.charAt(0).toUpperCase()}
@@ -207,7 +226,14 @@ function Perfil() {
           </div>
           <div style={{ flex: 1 }}>
             <p className="perfil-nome">{nomeMostrado}</p>
-            <p className="perfil-local">{local}{statusTexto() ? ` · ${statusTexto()}` : ""}</p>
+            <p className="perfil-local">
+              {local}{statusTexto() ? ` · ${statusTexto()}` : ""}
+              {tema.id && (
+                <span className="tema-badge" style={{ color: tema.cor1, background: tema.cor1 + "1a" }}>
+                  🎨 {tema.nome}
+                </span>
+              )}
+            </p>
             {ehMeu ? (
               <button className="link-foto" onClick={abrirSeletor} disabled={enviandoFoto}>
                 {enviandoFoto ? "enviando..." : "trocar foto"}
@@ -330,6 +356,24 @@ function Perfil() {
               <option value="casado(a)">casado(a)</option>
               <option value="é complicado">é complicado</option>
             </select>
+          </div>
+          <div className="campo">
+            <label>tema do perfil</label>
+            <div className="tema-grid">
+              {TEMAS.map((t) => (
+                <button
+                  key={t.id || "padrao"}
+                  type="button"
+                  title={t.nome}
+                  className={`tema-bolinha${temaPerfil === t.id ? " ativo" : ""}`}
+                  style={{ background: `linear-gradient(135deg, ${t.cor1}, ${t.cor2})` }}
+                  onClick={() => setTemaPerfil(t.id)}
+                />
+              ))}
+            </div>
+            <p style={{ fontSize: 12, color: "var(--texto-fraco)", marginTop: 4 }}>
+              selecionado: {TEMAS.find((t) => t.id === temaPerfil)?.nome || "trybut (padrão)"}
+            </p>
           </div>
           <button className="btn-primario" onClick={salvar}>salvar</button>
           {salvo && <p className="salvo">salvo!</p>}
