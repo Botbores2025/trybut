@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { Home, MessageCircle, Users, Search, Share2, Settings } from "lucide-react";
+import { Home, MessageCircle, Users, Search, Share2, Settings, ShoppingBag } from "lucide-react";
 
 async function convidarAmigos() {
   const dados = {
@@ -53,6 +53,7 @@ export default function SidebarEsq() {
       <Link href="/" className="side-link"><Home size={22} /> início</Link>
       <Link href="/mensagens" className="side-link"><MessageCircle size={22} /> mensagens</Link>
       <Link href="/comunidades" className="side-link"><Users size={22} /> comunidades</Link>
+      <Link href="/bazar" className="side-link"><ShoppingBag size={22} /> bazar</Link>
       <Link href="/buscar" className="side-link"><Search size={22} /> buscar pessoas</Link>
       <Link href="/configuracoes" className="side-link"><Settings size={22} /> configurações</Link>
       <div className="side-divisor" />

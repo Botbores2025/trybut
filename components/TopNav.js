@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Home, MessageCircle, Users, User, Search, Bell, Moon, Sun, Settings } from "lucide-react";
+import { Home, MessageCircle, Users, User, Search, Bell, Moon, Sun, Settings, ShoppingBag } from "lucide-react";
 
 export default function TopNav() {
   const path = usePathname();
@@ -88,6 +88,7 @@ export default function TopNav() {
           {msgCount > 0 && <span className="notif-badge tab-badge">{msgCount > 9 ? "9+" : msgCount}</span>}
         </Link>
         <Link href="/comunidades" className={tab(path.startsWith("/comunidades"))} aria-label="comunidades"><Users size={24} /></Link>
+        <Link href="/bazar" className={tab(path.startsWith("/bazar"))} aria-label="bazar"><ShoppingBag size={24} /></Link>
         <Link href={meuPerfil} className={tab(path.startsWith("/perfil"))} aria-label="perfil"><User size={24} /></Link>
       </nav>
     </header>
