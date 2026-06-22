@@ -25,6 +25,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { uploadCloudinary } from "@/lib/cloudinary";
 import { buscarAmigosUids } from "@/lib/social";
+import { adicionarXp, getNivel, NIVEIS, XP_ACOES } from "@/lib/xp";
 import AppShell from "@/components/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
 import Link from "next/link";
@@ -140,12 +141,14 @@ function Feed() {
         autorUid: user.uid,
         autorNome: perfil?.nome || "alguém",
         autorFoto: perfil?.fotoURL || "",
+        autorNivel: getNivel(perfil?.xp || 0).nivel,
         texto: t,
         fotoURL,
         curtidasPor: [],
         comentariosCount: 0,
         criadoEm: serverTimestamp(),
       });
+      adicionarXp(user.uid, XP_ACOES.POST);
       // notificar amigos
       if (amigosUids && amigosUids.length > 0) {
         const nBatch = writeBatch(db);
@@ -187,12 +190,14 @@ function Feed() {
         autorUid: user.uid,
         autorNome: perfil?.nome || "alguém",
         autorFoto: perfil?.fotoURL || "",
+        autorNivel: getNivel(perfil?.xp || 0).nivel,
         tipo: "enquete",
         texto: q,
         opcoes: ops,
         votos: {},
         criadoEm: serverTimestamp(),
       });
+      adicionarXp(user.uid, XP_ACOES.POST);
       if (amigosUids && amigosUids.length > 0) {
         const nBatch = writeBatch(db);
         for (const aUid of amigosUids.slice(0, 100)) {
@@ -316,6 +321,7 @@ function Enquete({ post, user }) {
       await updateDoc(doc(db, "posts", post.id), {
         [`votos.${user.uid}`]: indice,
       });
+      adicionarXp(user.uid, XP_ACOES.ENQUETE_VOTO);
     } catch (e) {
       console.error(e);
       alert("não consegui votar. tenta de novo.");
@@ -351,6 +357,7 @@ const REACOES = [
 ];
 
 function Post({ post, user, meuPerfil }) {
+  const nivelAutor = NIVEIS.find((n) => n.nivel === post.autorNivel) || NIVEIS[0];
   const reacoes = post.reacoes || {};
   const minhaReacao = reacoes[user.uid] || null;
   const legacyCurtidas = (post.curtidasPor || []).length;
@@ -396,6 +403,7 @@ function Post({ post, user, meuPerfil }) {
         await updateDoc(doc(db, "posts", post.id), {
           [`reacoes.${user.uid}`]: tipo,
         });
+        adicionarXp(user.uid, XP_ACOES.REACAO);
       }
     } catch (e) {
       console.error(e);
@@ -417,6 +425,7 @@ function Post({ post, user, meuPerfil }) {
       await updateDoc(doc(db, "posts", post.id), {
         comentariosCount: increment(1),
       });
+      adicionarXp(user.uid, XP_ACOES.COMENTARIO);
       setNovo("");
     } catch (e) {
       console.error(e);
@@ -442,7 +451,12 @@ function Post({ post, user, meuPerfil }) {
         <Link href={`/perfil/${post.autorUid}`} className="post-cabecalho post-cabecalho-link">
           <Inicial nome={post.autorNome} foto={post.autorFoto} />
           <div>
-            <p className="post-autor">{post.autorNome}</p>
+            <p className="post-autor">
+              {post.autorNome}
+              <span className="nivel-badge-mini" style={{ background: nivelAutor.cor }} title={nivelAutor.nome}>
+                {nivelAutor.emoji}
+              </span>
+            </p>
             <p className="post-tempo">{tempoRelativo(post.criadoEm)}</p>
           </div>
         </Link>

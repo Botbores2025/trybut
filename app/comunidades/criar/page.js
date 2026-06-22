@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { adicionarXp, XP_ACOES } from "@/lib/xp";
 import AppShell from "@/components/AppShell";
 
 export default function CriarGrupoPage() {
@@ -71,6 +72,7 @@ function CriarGrupo() {
         timestamp: serverTimestamp(),
         criadoEm: serverTimestamp(),
       });
+      adicionarXp(user.uid, XP_ACOES.GRUPO);
       router.push(`/comunidades/${ref.id}`);
     } catch (e) {
       console.error(e);

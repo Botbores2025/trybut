@@ -17,6 +17,7 @@ import {
 import AppShell from "@/components/AppShell";
 import ConfirmModal from "@/components/ConfirmModal";
 import { Share2 } from "lucide-react";
+import { getNivel, getProximoNivel, NIVEIS } from "@/lib/xp";
 
 const TEMAS = [
   { id: "", nome: "trybut (padrão)", cor1: "#f26522", cor2: "#d45a1e" },
@@ -188,6 +189,9 @@ function Perfil() {
   const nomeMostrado = perfil.nome || "sem nome";
   const local = perfil.cidade ? perfil.cidade : "Brasil";
   const tema = TEMAS.find((t) => t.id === (perfil.temaPerfil || "")) || TEMAS[0];
+  const xpAtual = perfil.xp || 0;
+  const nivelAtual = getNivel(xpAtual);
+  const proximo = getProximoNivel(xpAtual);
 
   function statusTexto() {
     if (ehMeu) return "";
@@ -233,6 +237,11 @@ function Perfil() {
                   🎨 {tema.nome}
                 </span>
               )}
+            </p>
+            <p style={{ margin: "4px 0 0" }}>
+              <span className="nivel-badge" style={{ background: nivelAtual.cor }}>
+                {nivelAtual.emoji} {nivelAtual.nome}
+              </span>
             </p>
             {ehMeu ? (
               <button className="link-foto" onClick={abrirSeletor} disabled={enviandoFoto}>
@@ -307,6 +316,25 @@ function Perfil() {
             <strong>{perfil.amigosCount || 0}</strong><span>amigos</span>
           </div>
         </div>
+
+        {proximo ? (
+          <>
+            <div className="xp-barra-container">
+              <div className="xp-barra">
+                <div
+                  className="xp-barra-fill"
+                  style={{
+                    width: `${Math.min(100, Math.round(((xpAtual - nivelAtual.xpMin) / (proximo.xpMin - nivelAtual.xpMin)) * 100))}%`,
+                    background: nivelAtual.cor,
+                  }}
+                />
+              </div>
+            </div>
+            <p className="xp-texto">{xpAtual} / {proximo.xpMin} XP</p>
+          </>
+        ) : (
+          <p className="xp-texto">nível máximo atingido! 🏆 {xpAtual} XP</p>
+        )}
 
         {mostraAmigos && (
           <div className="amigos-lista">

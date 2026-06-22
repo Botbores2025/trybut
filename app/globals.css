@@ -1676,6 +1676,19 @@ textarea { resize: vertical; }
 }
 .erro { color: #ef4444; font-size: 13px; font-weight: 600; }
 
+/* ---------- Sistema de XP e níveis ---------- */
+.nivel-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 10px; color: #fff; font-size: 12px; font-weight: 700; margin-left: 8px; vertical-align: middle; }
+.nivel-badge-mini { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 11px; margin-left: 4px; flex-shrink: 0; vertical-align: middle; }
+.xp-barra-container { margin: 8px 20px 4px; }
+.xp-barra { width: 100%; height: 6px; background: var(--borda); border-radius: 3px; overflow: hidden; }
+.xp-barra-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.xp-texto { font-size: 11px; color: var(--texto-fraco); margin-top: 4px; text-align: right; padding: 0 20px; }
+@media (max-width: 600px) {
+  .nivel-badge { font-size: 11px; padding: 2px 8px; }
+  .xp-barra-container { margin: 8px 16px 4px; }
+  .xp-texto { padding: 0 16px; }
+}
+
 /* ---------- Temas de perfil ---------- */
 .tema-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
 .tema-bolinha { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.15s; }

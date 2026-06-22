@@ -10,6 +10,7 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { idConversa } from "@/lib/chat";
+import { adicionarXp, XP_ACOES } from "@/lib/xp";
 import { uploadCloudinary } from "@/lib/cloudinary";
 import AppShell from "@/components/AppShell";
 import StickerPicker from "@/components/StickerPicker";
@@ -131,6 +132,7 @@ function Chat() {
         };
       }
       await addDoc(collection(db, "conversas", cid, "mensagens"), msgData);
+      adicionarXp(user.uid, XP_ACOES.MENSAGEM);
       await setDoc(doc(db, "notificacoes", `msg_${user.uid}_${uid}`), {
         tipo: "mensagem", deUid: user.uid, deNome: eu?.nome || "alguém",
         deFoto: eu?.fotoURL || "", paraUid: uid, previa,

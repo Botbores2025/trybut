@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { collection, addDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { uploadCloudinary } from "@/lib/cloudinary";
+import { adicionarXp, XP_ACOES } from "@/lib/xp";
 import { useAuth } from "@/context/AuthContext";
 import AppShell from "@/components/AppShell";
 import { ArrowLeft, X, Plus } from "lucide-react";
@@ -81,6 +82,7 @@ export default function CriarAnuncioPage() {
         ativo: true,
         criadoEm: serverTimestamp(),
       });
+      adicionarXp(user.uid, XP_ACOES.ANUNCIO);
 
       router.push("/bazar");
     } catch (e) {
