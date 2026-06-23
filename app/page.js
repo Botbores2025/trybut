@@ -21,6 +21,7 @@ import {
   writeBatch,
   deleteField,
   deleteDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -72,6 +73,8 @@ function Feed() {
   const [stories, setStories] = useState([]);
   const [modoEnquete, setModoEnquete] = useState(false);
   const [opcoes, setOpcoes] = useState(["", ""]);
+  const [lembrancas, setLembrancas] = useState([]);
+  const [mostrarLembrancas, setMostrarLembrancas] = useState(true);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -112,6 +115,35 @@ function Feed() {
       } catch (e) { console.error(e); }
     })();
   }, [user, amigosUids]);
+
+  // NOTA: se der erro de índice, clique no link no console do navegador pra criar o índice no Firebase
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const periodos = [7, 30, 365];
+        const resultados = [];
+        for (const dias of periodos) {
+          const dataAlvo = new Date(Date.now() - dias * 24 * 60 * 60 * 1000);
+          const inicio = new Date(dataAlvo.getTime() - 12 * 60 * 60 * 1000);
+          const fim = new Date(dataAlvo.getTime() + 12 * 60 * 60 * 1000);
+          const q = query(
+            collection(db, "posts"),
+            where("autorUid", "==", user.uid),
+            where("criadoEm", ">=", Timestamp.fromDate(inicio)),
+            where("criadoEm", "<=", Timestamp.fromDate(fim))
+          );
+          const snap = await getDocs(q);
+          snap.docs.forEach((d) => {
+            resultados.push({ id: d.id, ...d.data(), diasAtras: dias });
+          });
+        }
+        setLembrancas(resultados);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [user]);
 
   useEffect(() => {
     if (!user || amigosUids === null) return;
@@ -293,6 +325,32 @@ function Feed() {
           </button>
         </div>
       </section>
+
+      {mostrarLembrancas && lembrancas.length > 0 && (
+        <div className="lembrancas-section">
+          <div className="lembrancas-card">
+            <div className="lembrancas-header">
+              <div>
+                <p className="lembrancas-titulo">📸 lembranças</p>
+                <p className="lembrancas-sub">olha o que você postou!</p>
+              </div>
+              <button className="lembrancas-fechar" onClick={() => setMostrarLembrancas(false)}>×</button>
+            </div>
+            <div className="lembrancas-scroll">
+              {lembrancas.map((l, i) => {
+                const badge = l.diasAtras === 365 ? "há 1 ano" : l.diasAtras === 30 ? "há 1 mês" : "há 7 dias";
+                return (
+                  <div key={l.id + i} className="lembranca-mini">
+                    <span className="lembranca-badge">{badge}</span>
+                    {l.fotoURL && <img src={l.fotoURL} alt="" className="lembranca-foto" />}
+                    {l.texto && <p className="lembranca-texto">{l.texto}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {posts.length === 0 && (
         <p className="vazio">ainda não tem nada por aqui. seja o primeiro a postar!</p>
